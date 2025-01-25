@@ -1,0 +1,222 @@
+{
+  "C:\\Projetos\\BullsPay\\bulls-pay-back-end": {
+    "versionSfCore": null,
+    "versionFramework": "4.4.19",
+    "isWithinCompose": false,
+    "isCompose": false,
+    "composeOrgName": null,
+    "composeResolverProviders": {
+      "default-aws-credential-resolver": "<REDACTED>",
+      "sls": {
+        "instance": {
+          "credentials": "<REDACTED>",
+          "serviceConfigFile": {
+            "org": "vitorlbarroso",
+            "app": "bulls-pay-back-end-dev",
+            "service": "laravel",
+            "provider": {
+              "name": "aws",
+              "region": "us-east-1",
+              "environment": {
+                "APP_ENV": "production",
+                "SESSION_DRIVER": "cookie"
+              },
+              "stage": "dev",
+              "versionFunctions": true,
+              "deploymentMethod": "direct"
+            },
+            "package": {
+              "patterns": [
+                "!node_modules/**",
+                "!public/storage",
+                "!resources/assets/**",
+                "!storage/**",
+                "!tests/**",
+                "!database/*.sqlite"
+              ],
+              "artifactsS3KeyDirname": "serverless/laravel/dev/code-artifacts"
+            },
+            "functions": {
+              "web": {
+                "handler": "public/index.php",
+                "runtime": "provided.al2",
+                "timeout": 28,
+                "events": [
+                  {
+                    "httpApi": "*",
+                    "resolvedMethod": "ANY"
+                  }
+                ],
+                "name": "laravel-dev-web",
+                "layers": [
+                  "arn:aws:lambda:us-east-1:534081306603:layer:php-81-fpm:97"
+                ]
+              },
+              "artisan": {
+                "handler": "artisan",
+                "runtime": "provided.al2",
+                "timeout": 720,
+                "events": [],
+                "name": "laravel-dev-artisan",
+                "layers": [
+                  "arn:aws:lambda:us-east-1:534081306603:layer:php-81:97",
+                  "arn:aws:lambda:us-east-1:534081306603:layer:console:95"
+                ]
+              }
+            },
+            "plugins": [
+              "./vendor/bref/bref"
+            ]
+          },
+          "configFileDirPath": "C:\\Projetos\\BullsPay\\bulls-pay-back-end",
+          "config": {
+            "type": "sls"
+          },
+          "options": {},
+          "stage": "dev",
+          "dashboard": null,
+          "logger": {
+            "namespace": "s:core:resolver:sls",
+            "prefix": null,
+            "prefixColor": null
+          },
+          "_credentialsPromise": "<REDACTED>"
+        },
+        "resolvers": {}
+      }
+    },
+    "composeServiceName": null,
+    "servicePath": "C:\\Projetos\\BullsPay\\bulls-pay-back-end",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "org": "vitorlbarroso",
+      "app": "bulls-pay-back-end-dev",
+      "service": "laravel",
+      "provider": {
+        "name": "aws",
+        "region": "us-east-1",
+        "environment": {
+          "APP_ENV": "production",
+          "SESSION_DRIVER": "cookie"
+        },
+        "stage": "dev",
+        "versionFunctions": true,
+        "deploymentMethod": "direct"
+      },
+      "package": {
+        "patterns": [
+          "!node_modules/**",
+          "!public/storage",
+          "!resources/assets/**",
+          "!storage/**",
+          "!tests/**",
+          "!database/*.sqlite"
+        ],
+        "artifactsS3KeyDirname": "serverless/laravel/dev/code-artifacts"
+      },
+      "functions": {
+        "web": {
+          "handler": "public/index.php",
+          "runtime": "provided.al2",
+          "timeout": 28,
+          "events": [
+            {
+              "httpApi": "*",
+              "resolvedMethod": "ANY"
+            }
+          ],
+          "name": "laravel-dev-web",
+          "layers": [
+            "arn:aws:lambda:us-east-1:534081306603:layer:php-81-fpm:97"
+          ]
+        },
+        "artisan": {
+          "handler": "artisan",
+          "runtime": "provided.al2",
+          "timeout": 720,
+          "events": [],
+          "name": "laravel-dev-artisan",
+          "layers": [
+            "arn:aws:lambda:us-east-1:534081306603:layer:php-81:97",
+            "arn:aws:lambda:us-east-1:534081306603:layer:console:95"
+          ]
+        }
+      },
+      "plugins": [
+        "./vendor/bref/bref"
+      ]
+    },
+    "serviceRawFile": "# \"org\" ensures this Service is used with the correct Serverless Framework Access Key.\norg: vitorlbarroso\n# \"app\" enables Serverless Framework Dashboard features and sharing them with other Services.\napp: bulls-pay-back-end-dev\nservice: laravel\n\nprovider:\n    name: aws\n    # The AWS region in which to deploy (us-east-1 is the default)\n    region: us-east-1\n    # Environment variables\n    environment:\n        APP_ENV: production # Or use ${sls:stage} if you want the environment to match the stage\n        SESSION_DRIVER: cookie # Change to database if you have set up a database\n\npackage:\n    # Files and directories to exclude from deployment\n    patterns:\n        - '!node_modules/**'\n        - '!public/storage'\n        - '!resources/assets/**'\n        - '!storage/**'\n        - '!tests/**'\n        - '!database/*.sqlite'\n\nfunctions:\n\n    # This function runs the Laravel website/API\n    web:\n        handler: public/index.php\n        runtime: php-81-fpm\n        timeout: 28 # in seconds (API Gateway has a timeout of 29 seconds)\n        events:\n            - httpApi: '*'\n\n    # This function lets us run artisan commands in Lambda\n    artisan:\n        handler: artisan\n        runtime: php-81-console\n        timeout: 720 # in seconds\n        # Uncomment to also run the scheduler every minute\n        #events:\n        #    - schedule:\n        #          rate: rate(1 minute)\n        #          input: '\"schedule:run\"'\n\nplugins:\n    # We need to include the Bref plugin\n    - ./vendor/bref/bref\n",
+    "command": [
+      "info"
+    ],
+    "options": {},
+    "error": null,
+    "params": {},
+    "machineId": "a2bcb33c0f68172720fa4cb3b25436fa",
+    "stage": "dev",
+    "accessKeyV2": "<REDACTED>",
+    "accessKeyV1": "<REDACTED>",
+    "orgId": "6cc9ee66-2a44-4de9-bc7e-2d1afe9041af",
+    "orgName": "vitorlbarroso",
+    "userId": "BVQdx3glFwnJdpd0Rq",
+    "dashboard": {
+      "isEnabledForService": true,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": {
+        "providers": false,
+        "monitoring": false
+      },
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": "zCcT47PZQwVXn2VDXH",
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "userName": "vitorlbarroso",
+    "subscription": null,
+    "userEmail": "vitor.barroso@aluno.edu.es.gov.br",
+    "serviceProviderAwsRegion": "us-east-1",
+    "serviceProviderAwsCredentials": "<REDACTED>",
+    "serviceProviderAwsAccountId": "727646505944",
+    "projectType": "traditional",
+    "versionSf": "4.4.19",
+    "serviceProviderAwsCfStackName": "laravel-dev",
+    "integrations": {},
+    "serviceUniqueId": "arn:aws:cloudformation:us-east-1:727646505944:stack/laravel-dev/08d3b990-d509-11ef-ae6b-0affe1803039",
+    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:727646505944:stack/laravel-dev/08d3b990-d509-11ef-ae6b-0affe1803039",
+    "serviceProviderAwsCfStackCreated": "2025-01-17T19:27:05.261Z",
+    "serviceProviderAwsCfStackUpdated": "2025-01-17T20:09:00.508Z",
+    "serviceProviderAwsCfStackStatus": "UPDATE_COMPLETE",
+    "serviceProviderAwsCfStackOutputs": [
+      {
+        "OutputKey": "WebLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:727646505944:function:laravel-dev-web:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-laravel-dev-WebLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "HttpApiId",
+        "OutputValue": "8yruo95dy3",
+        "Description": "Id of the HTTP API",
+        "ExportName": "sls-laravel-dev-HttpApiId"
+      },
+      {
+        "OutputKey": "ArtisanLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:727646505944:function:laravel-dev-artisan:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-laravel-dev-ArtisanLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ServerlessDeploymentBucketName",
+        "OutputValue": "serverless-framework-deployments-us-east-1-0bc955da-0136",
+        "ExportName": "sls-laravel-dev-ServerlessDeploymentBucketName"
+      },
+      {
+        "OutputKey": "HttpApiUrl",
+        "OutputValue": "https://8yruo95dy3.execute-api.us-east-1.amazonaws.com",
+        "Description": "URL of the HTTP API",
+        "ExportName": "sls-laravel-dev-HttpApiUrl"
+      }
+    ]
+  }
+}

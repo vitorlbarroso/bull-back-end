@@ -22,7 +22,7 @@ class BaseProductRequest extends FormRequest
     {
         return [
             'product_name' => 'string|min:3|nullable',
-            'product_description' => 'string|min:7|nullable',
+            'product_description' => 'string|min:3|nullable',
             'product_type' => 'integer|min:1|nullable',
             'product_category' => 'integer|min:1|nullable',
             'card_description' => 'string|min:1|nullable',
