@@ -50,26 +50,37 @@ class CelCashService
 
     static public function generateToken()
     {
-        $galaxId = env('CELCASH_GALAX_ID');
-        $galaxHash = env('CELCASH_GALAX_HASH');
+        $clientId = env('CELCASH_GALAX_ID');
+        $clientSecret = env('CELCASH_GALAX_HASH');
         $baseUrl = env('CELCASH_BASE_URL');
+        $certPath = env('CELCASH_CERTIFICATE_PATH');
+        $certCrtPath = env('CELCASH_CERTIFICATE_CRT_PATH');
+        $certPassphrase = env('CELCASH_CERTIFICATE_PASSPHRASE');
 
         $headers = [
-            'Authorization' => 'Basic ' . base64_encode($galaxId . ':' . $galaxHash),
             'Content-Type' => 'application/json',
         ];
 
         $body = [
-            'grant_type' => 'authorization_code',
-            'scope' => 'company.write company.read charges.write',
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+            'grant_type' => 'client_credentials',
         ];
 
         try {
-            $response = HTTP::withHeaders($headers)->post($baseUrl . "/v2/token", $body);
+            $response = HTTP::withHeaders($headers)
+                ->withOptions([
+                    'cert' => [$certPath, $certPassphrase],
+                    'verify' => false
+                ])
+                ->post($baseUrl . "/oauth/token", $body);
 
             $data = $response->json();
+
+            return $data;
+
             $accessToken = $data['access_token'];
-            $expiresIn = Carbon::now()->addMinutes(5);
+            $expiresIn = Carbon::now()->addMinutes(3);
 
             CelcashPaymentsGatewayData::updateOrCreate(
                 ['id' => 1],
@@ -81,6 +92,7 @@ class CelCashService
         }
         catch(\Exception $e) {
             Log::error('Erro ao atualizar token de requisição API: ' . $e->getMessage());
+            return 'Erro: ' . $e->getMessage();
         }
     }
 

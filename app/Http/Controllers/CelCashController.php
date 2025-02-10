@@ -368,6 +368,9 @@ class CelCashController extends Controller
     {
         $validatedData = $request->validated();
 
+        $generateToken = CelCashService::generateToken();
+        return $generateToken;
+
         $getPrincipalOffer = ProductOffering::where('id', $validatedData['principal_offer'])
             ->where('is_deleted', 0)
             ->with('product.user')
