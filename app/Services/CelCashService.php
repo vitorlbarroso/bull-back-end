@@ -77,8 +77,6 @@ class CelCashService
 
             $data = $response->json();
 
-            return $data;
-
             $accessToken = $data['access_token'];
             $expiresIn = Carbon::now()->addMinutes(3);
 
@@ -92,7 +90,6 @@ class CelCashService
         }
         catch(\Exception $e) {
             Log::error('Erro ao atualizar token de requisição API: ' . $e->getMessage());
-            return 'Erro: ' . $e->getMessage();
         }
     }
 
