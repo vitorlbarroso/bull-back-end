@@ -426,7 +426,6 @@ class CelCashController extends Controller
 
         $calculateTax = CelCashService::calculateTax('pix', $getPrincipalOffer->product->user->id, $totalPrice);
 
-        $generateMyId = 'fp-' . uniqid() . '-' . bin2hex(random_bytes(4));
         $generatePayday = new DateTime();
         $generatePayday->modify('+2 day');
         $formatedPayday = $generatePayday->format('Y-m-d');
@@ -441,8 +440,8 @@ class CelCashController extends Controller
                 ->first();
         }
 
-        $data = [
-            'my_id' => $generateMyId,
+        /*$data = [
+            'txid' => $generateMyId,
             'value' => $totalPrice,
             'payday' => $formatedPayday,
             'customer_name' => $validatedData['customer_name'],
@@ -451,6 +450,16 @@ class CelCashController extends Controller
             'customer_phone' => $validatedData['customer_phone'],
             'split_galax_pay_id' => $getGalaxPayId->galax_pay_id,
             'split_value' => $calculateTax
+        ];*/
+
+        $data = [
+            'calendario' => [
+                'expiracao' => 86400
+            ],
+            'valor' => [
+                'original' => ($totalPrice / 100),
+                'modalidadeAlteracao' => 0
+            ],
         ];
 
         $generatePayment = CelCashService::generatePaymentPix($data);
@@ -472,7 +481,7 @@ class CelCashController extends Controller
                 $createCelcashPayments = CelcashPayments::create([
                     'receiver_user_id' => $getPrincipalOffer->product->user->id,
                     'buyer_user_id' => null,
-                    'galax_pay_id' => $generatePayment['Charge']['galaxPayId'],
+                    'galax_pay_id' => $generatePayment['txid'],
                     'type' => 'pix',
                     'installments' => 1,
                     'total_value' => $totalPrice,
@@ -487,10 +496,8 @@ class CelCashController extends Controller
 
                 $createPixDetails = CelcashPaymentsPixData::create([
                     'celcash_payments_id' => $createCelcashPayments->id,
-                    'qr_code' => $generatePayment['Charge']['Transactions'][0]['Pix']['qrCode'],
-                    'reference' => $generatePayment['Charge']['Transactions'][0]['Pix']['reference'],
-                    'image' => $generatePayment['Charge']['Transactions'][0]['Pix']['image'],
-                    'page' => $generatePayment['Charge']['Transactions'][0]['Pix']['page'],
+                    'qr_code' => $generatePayment['pixCopiaECola'],
+                    'reference' => $generatePayment['pixCopiaECola'],
                 ]);
 
                 foreach ($offersData as $offer) {
@@ -507,10 +514,8 @@ class CelCashController extends Controller
         }
 
         $returnData = [
-            'galax_pay_id' => $generatePayment['Charge']['galaxPayId'],
-            'qr_code' => $generatePayment['Charge']['Transactions'][0]['Pix']['qrCode'],
-            'reference' => $generatePayment['Charge']['Transactions'][0]['Pix']['reference'],
-            'image' => $generatePayment['Charge']['Transactions'][0]['Pix']['image'],
+            'galax_pay_id' => $generatePayment['txid'],
+            'qr_code' => $generatePayment['pixCopiaECola'],
         ];
 
         return Responses::SUCCESS('Pedido pix gerado com sucesso!', $returnData, 200);

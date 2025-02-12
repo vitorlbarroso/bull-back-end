@@ -7,6 +7,7 @@ use App\ExternalApis\CelCash\CnpjUsersRequests;
 use App\ExternalApis\CelCash\CpfUsersRequests;
 use App\ExternalApis\CelCash\PaymentsRequest;
 use App\Http\Helpers\Responses;
+use App\Models\BankPixKey;
 use App\Models\CelcashPaymentsGatewayData;
 use App\Models\User;
 use App\Models\UserCelcashCpfCredentials;
@@ -24,14 +25,20 @@ class CelCashService
             $getToken = CelcashPaymentsGatewayData::first();
 
             if (!$getToken) {
-                Log::info('Token da celcash não foi localizado ou está expirado!');
+                Log::info('Token da voluti não foi localizado ou está expirado!');
 
-                return [
-                    'error' => [
-                        'message' => "Token não localizado ou expirado",
-                        'errorCode' => 1200
-                    ]
-                ];
+                $token = self::generateToken();
+
+                if (!$token) {
+                    return [
+                        'error' => [
+                            'message' => "Token não localizado ou expirado",
+                            'errorCode' => 1200
+                        ]
+                    ];
+                }
+
+                return $token;
             }
 
             return $getToken;
@@ -89,6 +96,7 @@ class CelCashService
             );
         }
         catch(\Exception $e) {
+            return $e->getMessage();
             Log::error('Erro ao atualizar token de requisição API: ' . $e->getMessage());
         }
     }
@@ -198,18 +206,31 @@ class CelCashService
         return $createUser;
     }
 
+    static public function getBankPixKey()
+    {
+        $getBankPixKey = BankPixKey::first();
+
+        if (!$getBankPixKey)
+        {
+            return [
+                'error' => [
+                    'message' => "Chave Pix não cadastrada",
+                    'errorCode' => -1100
+                ]
+            ];
+        }
+
+        return $getBankPixKey;
+    }
+
     static public function generatePaymentPix($data)
     {
         $validator = Validator::make($data, [
-            'my_id' => 'required|string',
-            'value' => 'required|integer',
-            'payday' => 'required|string',
-            'customer_name' => 'required|string',
-            'customer_document' => 'required|string',
-            'customer_email' => 'required|string',
-            'customer_phone' => 'required|string',
-            'split_galax_pay_id' => 'required|integer',
-            'split_value' => 'required|integer',
+            'calendario' => 'required|array',
+            'calendario.expiracao' => 'required|numeric',
+            'valor' => 'required|array',
+            'valor.original' => 'required|numeric',
+            'valor.modalidadeAlteracao' => 'required|integer',
         ]);
 
         if ($validator->fails()) {
@@ -233,6 +254,13 @@ class CelCashService
             return $getToken;
 
         $validated['token'] = $getToken;
+
+        $getBankPix = self::getBankPixKey();
+
+        if ($getBankPix['error'])
+            return $getBankPix;
+
+        $validated['chave'] = $getBankPix->key;
 
         $generatePayment = PaymentsRequest::generatePaymentPix($validated);
 
