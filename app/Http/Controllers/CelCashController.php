@@ -440,18 +440,6 @@ class CelCashController extends Controller
                 ->first();
         }
 
-        /*$data = [
-            'txid' => $generateMyId,
-            'value' => $totalPrice,
-            'payday' => $formatedPayday,
-            'customer_name' => $validatedData['customer_name'],
-            'customer_document' => $validatedData['customer_document'],
-            'customer_email' => $validatedData['customer_email'],
-            'customer_phone' => $validatedData['customer_phone'],
-            'split_galax_pay_id' => $getGalaxPayId->galax_pay_id,
-            'split_value' => $calculateTax
-        ];*/
-
         $data = [
             'calendario' => [
                 'expiracao' => 86400
@@ -488,9 +476,9 @@ class CelCashController extends Controller
                     'value_to_receiver' => $calculateTax,
                     'value_to_platform' => floor($totalPrice - $calculateTax),
                     'payday' => $formatedPayday,
-                    'buyer_name' => $validatedData['customer_name'],
-                    'buyer_email' => $validatedData['customer_email'],
-                    'buyer_document_cpf' => $validatedData['customer_document'],
+                    'buyer_name' => $validatedData['customer_name'] ?? null,
+                    'buyer_email' => $validatedData['customer_email'] ?? null,
+                    'buyer_document_cpf' => $validatedData['customer_document'] ?? null,
                     'status' => 'pending_pix'
                 ]);
 
@@ -516,6 +504,7 @@ class CelCashController extends Controller
         $returnData = [
             'galax_pay_id' => $generatePayment['txid'],
             'qr_code' => $generatePayment['pixCopiaECola'],
+            'upsell' => $getPrincipalOffer->sale_completed_page_url
         ];
 
         return Responses::SUCCESS('Pedido pix gerado com sucesso!', $returnData, 200);
