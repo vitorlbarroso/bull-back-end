@@ -1,31 +1,32 @@
 <?php
 
-namespace App\Mail\Authentication;
+namespace App\Mail\Sales;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\Writer\PngWriter;
 
-class RecoverPasswordMail extends Mailable
+
+class GeneratePixMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $name;
-    public $token;
-    public $email;
+    public $pixCode;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct($name, $token, $email)
+    public function __construct($name, $pixCode)
     {
         $this->name = $name;
-        $this->token = $token;
-        $this->email = $email;
+        $this->pixCode = $pixCode;
     }
 
     /**
@@ -34,8 +35,8 @@ class RecoverPasswordMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('nao-responda@plataformabulls.online', 'Bulls Pay'),
-            subject: 'A sua solicitação de recuperação de senha chegou!',
+            from: new Address('pix@plataformabulls.online', 'Bulls Pay'),
+            subject: 'Pague o seu PIX aqui!',
         );
     }
 
@@ -45,11 +46,10 @@ class RecoverPasswordMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            html: 'mails.recover-password',
+            html: 'mails.generate-pix',
             with: [
                 'name' => $this->name,
-                'token' => $this->token,
-                'email' => $this->email,
+                'pixCode' => $this->pixCode
             ],
         );
     }

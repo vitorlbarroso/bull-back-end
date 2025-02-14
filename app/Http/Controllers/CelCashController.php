@@ -8,6 +8,7 @@ use App\Http\Helpers\Responses;
 use App\Http\Requests\CelCashGateway\CreateUserCnpjRequest;
 use App\Http\Requests\CelCashGateway\CreateUserCpfRequest;
 use App\Http\Requests\CelCashGateway\GeneratePaymentPixRequest;
+use App\Mail\Sales\GeneratePixMail;
 use App\Models\CelcashCreateAccountsErrors;
 use App\Models\CelcashPayments;
 use App\Models\CelcashPaymentsGatewayData;
@@ -25,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use PhpParser\Node\Stmt\Return_;
 
 class CelCashController extends Controller
@@ -506,6 +508,13 @@ class CelCashController extends Controller
             'qr_code' => $generatePayment['pixCopiaECola'],
             'upsell' => $getPrincipalOffer->sale_completed_page_url
         ];
+
+            Mail::to($validatedData['customer_email'])->send(new GeneratePixMail($validatedData['customer_name'], $generatePayment['pixCopiaECola']));
+        /*try {
+        }
+        catch (\Exception $e) {
+            Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao tentar enviar um e-mail de pagamento |', [ 'ERRO' => $e->getMessage()]);
+        }*/
 
         return Responses::SUCCESS('Pedido pix gerado com sucesso!', $returnData, 200);
     }
