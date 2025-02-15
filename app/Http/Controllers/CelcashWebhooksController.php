@@ -86,54 +86,26 @@ class CelcashWebhooksController extends Controller
     {
         $validatedData = $request->validated();
 
-        if ($validatedData['event'] != 'transaction.updateStatus') {
-            try {
-                $createLog = \App\Models\CelcashWebhook::create([
-                    'webhook_title' => 'EVENTO NÃO AUTORIZADO',
-                    'webhook_id' => $validatedData['webhookId'],
-                    'webhook_event' => $validatedData['event'],
-                    'webhook_data' => $request,
-                ]);
-            } catch (\Throwable $th) {
-                Log::error('Ocorreu um erro ao salvar um log de crash do webhook!', ['error' => $th->getMessage()]);
-            }
+        $data = $validatedData['data'];
 
-            return Responses::ERROR('Evento não autorizado!', $validatedData['event'], 1100, 400);
-        }
-
-        $verifyConfirmHash = CelcashConfirmHashWebhook::where('webhook_event', $validatedData['event'])
-            ->where('confirm_hash', $validatedData['confirmHash'])
-            ->exists();
-
-        if (!$verifyConfirmHash) {
-            return Responses::ERROR('Credenciais de confirmação incorretas!', null, 1200, 400);
-        }
-
-        $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['Transaction']['chargeGalaxPayId'])
+        $getTransaction = CelcashPayments::where('galax_pay_id', $data['txId'])
             ->first();
 
         if (!$getTransaction) {
             return Responses::ERROR('Transação não localizada!', null, 1300, 400);
         }
 
-        $transactionNewStatus = $validatedData['Transaction']['status'];
-
         $isPayedStatus = false;
 
         if ($getTransaction->type == 'pix') {
-            switch ($transactionNewStatus) {
-                case 'pendingPix':
-                    $status = 'pending_pix';
-                    break;
-
-                case 'payedPix':
+            switch ($data['status']) {
+                case 'LIQUIDATED':
                     $status = 'payed_pix';
                     $isPayedStatus = true;
                     break;
 
-                case 'unavailablePix':
-                    $status = 'unavailable_pix';
-                    break;
+                default:
+                    $status = 'pending_pix';
             }
         }
 

@@ -22,9 +22,9 @@ class UpdatePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'event' => 'required|string',
-            'confirmHash' => 'required|string',
-            'Transaction' => 'required|array',
+            'data' => 'required',
+            'data.txId' => 'required',
+            'data.status' => 'required',
         ];
     }
 }
