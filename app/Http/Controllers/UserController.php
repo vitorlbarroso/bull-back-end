@@ -30,6 +30,7 @@ class UserController extends Controller
             'total_card_sales' => 0,
             'total_pix_sales' => 0,
             'total_billet_sales' => 0,
+            'total_pix_converted_sales' => 0,
             'graphics' => [
                 'sales_period_graphic' => [
                     "categories" => ["0:00"],
@@ -70,6 +71,9 @@ class UserController extends Controller
         /* Definindo total de vendas por Cartão */
         $getTotalCardSales = UserPaymentsDataService::getTotalCardSales($initialDate, $finishDate);
         $responseData['total_card_sales'] = $getTotalCardSales;
+
+        $getTotalPixConvertedSales = UserPaymentsDataService::getTotalPixConvertedSales($initialDate, $finishDate);
+        $responseData['total_pix_converted_sales'] = $getTotalPixConvertedSales;
 
         /* Definindo dados do grafico */
         $getSalesToGraphic = UserPaymentsDataService::getPeriodSalesToGraphic($initialDate, $finishDate);

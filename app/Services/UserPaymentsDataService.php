@@ -134,6 +134,36 @@ class UserPaymentsDataService
         return 0;
     }
 
+    static public function getTotalPixConvertedSales($initialDate = null, $finishDate = null) : float
+    {
+        $user = Auth::user();
+
+        [$initialDate, $finishDate] = self::convertDate($initialDate, $finishDate);
+
+        try {
+            $successfulPixPayments = CelcashPayments::where('receiver_user_id', $user->id)
+                ->where('type', 'pix')
+                ->where('status', 'payed_pix')
+                ->whereBetween('created_at', [$initialDate, $finishDate])
+                ->count();
+
+            $totalPixPayments = CelcashPayments::where('receiver_user_id', $user->id)
+                ->where('type', 'pix')
+                ->whereBetween('created_at', [$initialDate, $finishDate])
+                ->count();
+
+            $conversionRate = $totalPixPayments > 0 ? ($successfulPixPayments / $totalPixPayments) * 100 : 0;
+
+            return round($conversionRate, 2);
+        } catch (\Exception $e) {
+            Log::error('Erro ao calcular taxa de conversão PIX para o usuário ' . $user->id, [
+                'error' => $e->getMessage()
+            ]);
+
+            return 0;
+        }
+    }
+
     static public function getTotalPixSales($initialDate = null, $finishDate = null) : int
     {
         $user = Auth::user();
