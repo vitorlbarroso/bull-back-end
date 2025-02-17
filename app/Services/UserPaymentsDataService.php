@@ -154,7 +154,7 @@ class UserPaymentsDataService
 
             $conversionRate = $totalPixPayments > 0 ? ($successfulPixPayments / $totalPixPayments) * 100 : 0;
 
-            return round($conversionRate, 2);
+            return round($conversionRate, 1);
         } catch (\Exception $e) {
             Log::error('Erro ao calcular taxa de conversão PIX para o usuário ' . $user->id, [
                 'error' => $e->getMessage()
