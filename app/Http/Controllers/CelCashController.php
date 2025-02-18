@@ -537,14 +537,18 @@ class CelCashController extends Controller
                     'celcash_payments.buyer_email',
                     'celcash_payments.buyer_document_cpf',
                     'celcash_payments.status',
-                    'products.product_name as product_title',
-                    'celcash_payments_offers.type as buy_type'
+                    \DB::raw("(SELECT po.product_name
+                   FROM celcash_payments_offers cpo
+                   JOIN products_offerings pof ON cpo.products_offerings_id = pof.id
+                   JOIN products po ON pof.product_id = po.id
+                   WHERE cpo.celcash_payments_id = celcash_payments.id
+                   LIMIT 1) as product_title"),
+                    \DB::raw("(SELECT cpo.type
+                   FROM celcash_payments_offers cpo
+                   WHERE cpo.celcash_payments_id = celcash_payments.id
+                   LIMIT 1) as buy_type")
                 ])
-                ->leftJoin('celcash_payments_offers', 'celcash_payments.id', '=', 'celcash_payments_offers.celcash_payments_id')
-                ->leftJoin('products_offerings', 'celcash_payments_offers.products_offerings_id', '=', 'products_offerings.id')
-                ->leftJoin('products', 'products_offerings.product_id', '=', 'products.id')
-                ->where('celcash_payments.status', '!=', 'payed_pix')
-                ->where('celcash_payments.status', '!=', 'captured')
+                ->whereNotIn('celcash_payments.status', ['payed_pix', 'captured', 'chargeback', 'reversed', 'refunded'])
                 ->orderBy('celcash_payments.id', 'DESC')
                 ->paginate($itemsPerPage);
 
@@ -601,16 +605,18 @@ class CelCashController extends Controller
                     'celcash_payments.buyer_email',
                     'celcash_payments.buyer_document_cpf',
                     'celcash_payments.status',
-                    'products.product_name as product_title',
-                    'celcash_payments_offers.type as buy_type'
+                    \DB::raw("(SELECT po.product_name
+                   FROM celcash_payments_offers cpo
+                   JOIN products_offerings pof ON cpo.products_offerings_id = pof.id
+                   JOIN products po ON pof.product_id = po.id
+                   WHERE cpo.celcash_payments_id = celcash_payments.id
+                   LIMIT 1) as product_title"),
+                    \DB::raw("(SELECT cpo.type
+                   FROM celcash_payments_offers cpo
+                   WHERE cpo.celcash_payments_id = celcash_payments.id
+                   LIMIT 1) as buy_type")
                 ])
-                ->leftJoin('celcash_payments_offers', 'celcash_payments.id', '=', 'celcash_payments_offers.celcash_payments_id')
-                ->leftJoin('products_offerings', 'celcash_payments_offers.products_offerings_id', '=', 'products_offerings.id')
-                ->leftJoin('products', 'products_offerings.product_id', '=', 'products.id')
-                ->where(function ($query) {
-                    $query->where('celcash_payments.status', 'payed_pix')
-                        ->orWhere('celcash_payments.status', 'authorized');
-                })
+                ->whereIn('celcash_payments.status', ['payed_pix', 'authorized'])
                 ->orderBy('celcash_payments.id', 'DESC')
                 ->paginate($itemsPerPage);
 
