@@ -60,6 +60,11 @@ class UserController extends Controller
         $responseData['total_refund'] = $getTotalRefunds['total'];
         $responseData['percentage_refund'] = $getTotalRefunds['percentage'];
 
+        /* Definindo chargeback/med */
+        $getTotalChargeback = UserPaymentsDataService::calculateTotalChargeback($initialDate, $finishDate);
+        $responseData['total_chargeback'] = $getTotalChargeback['total'];
+        $responseData['percentage_chargeback'] = $getTotalChargeback['percentage'];
+
         /* Definindo total de orderbumps */
         $getTotalOrderbumps = UserPaymentsDataService::getTotalOrderbumpsSales($initialDate, $finishDate);
         $responseData['total_orderbump_sales'] = $getTotalOrderbumps;

@@ -85,7 +85,7 @@ class UserPaymentsDataService
         ];
 
         try {
-            $totalPayments = CelcashPayments::where('status', '!=', 'refunded')
+            $totalPayments = CelcashPayments::where('status', 'payed_pix')
                 ->where('receiver_user_id', $user->id)
                 ->whereBetween('created_at', [$initialDate, $finishDate])
                 ->count();
@@ -104,6 +104,45 @@ class UserPaymentsDataService
         }
         catch (\Exception $e) {
             Log::error('Ocorreu um erro ao buscar o total de reembolsos do usuário ' . $user->id, ['error' => $e->getMessage()]);
+        }
+
+        return $returnData;
+    }
+
+    static public function calculateTotalChargeback($initialDate = null, $finishDate = null) : array
+    {
+        $user = Auth::user();
+
+        [$initialDate, $finishDate] = self::convertDate($initialDate, $finishDate);
+
+        $returnData = [
+            'total' => 0,
+            'percentage' => 0
+        ];
+
+        try {
+            $totalPayments = CelcashPayments::where('status', 'payed_pix')
+                ->orWhere('status', 'chargeback')
+                ->orWhere('status', 'reversed')
+                ->where('receiver_user_id', $user->id)
+                ->whereBetween('created_at', [$initialDate, $finishDate])
+                ->count();
+
+            $totalChargeback = CelcashPayments::where('status', 'chargeback')
+                ->orWhere('status', 'reversed')
+                ->where('receiver_user_id', $user->id)
+                ->whereBetween('created_at', [$initialDate, $finishDate])
+                ->count();
+
+            if ($totalPayments + $totalChargeback > 0) {
+                $percentageChargeback = ($totalChargeback / ($totalPayments + $totalChargeback)) * 100;
+
+                $returnData['total'] = $totalChargeback;
+                $returnData['percentage'] = round($percentageChargeback, 2);
+            }
+        }
+        catch (\Exception $e) {
+            Log::error('Ocorreu um erro ao buscar o total de chargebacks do usuário ' . $user->id, ['error' => $e->getMessage()]);
         }
 
         return $returnData;
@@ -336,7 +375,12 @@ class UserPaymentsDataService
                 ->orWhere('status', 'authorized')
                 ->sum('value_to_receiver');
 
-            if ($getTotalPayments <= 0) {
+            $getTotalChargebacksPayments = CelcashPayments::where('receiver_user_id', $user->id)
+                ->where('status', 'chargeback')
+                ->orWhere('status', 'reversed')
+                ->sum('value_to_receiver');
+
+            if ($getTotalPayments <= 0 && $getTotalChargebacksPayments <= 0) {
                 return $returnData;
             }
 
@@ -352,9 +396,15 @@ class UserPaymentsDataService
                 ->orWhere('status', 'authorized')
                 ->sum('value_to_receiver');
 
-            $returnData['total_amount'] = ($getTotalPayments - $getTotalWithdraws) / 100;
+            $convertedTotalChargebacks = ($getTotalChargebacksPayments / 100);
+
+            $returnData['total_amount'] = (($getTotalPayments - $getTotalWithdraws) / 100) - $convertedTotalChargebacks;
             $returnData['total_pending'] = $getTotalPendingPayments / 100;
-            $returnData['total_available'] = (($getTotalPayments - $getTotalWithdraws) - $getTotalPendingPayments) / 100;
+
+            $availablePayments = ((($getTotalPayments - $getTotalWithdraws) - $getTotalPendingPayments) / 100) - $convertedTotalChargebacks > 0 ? ((($getTotalPayments - $getTotalWithdraws) - $getTotalPendingPayments) / 100) - $convertedTotalChargebacks : 0;
+
+            $returnData['total_available'] = $availablePayments;
+            $returnData['total_chargeback'] = $convertedTotalChargebacks;
         }
         catch (\Exception $e) {
             return $returnData;
