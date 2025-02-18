@@ -355,61 +355,57 @@ class UserPaymentsDataService
         return 0;
     }
 
-    static public function getWithdrawalData() : array
+    static public function getWithdrawalData(): array
     {
         $user = Auth::user();
-
         $returnData = [
             'total_amount' => 0,
             'total_pending' => 0,
-            'total_available' => 0
+            'total_available' => 0,
+            'total_chargeback' => 0,
+            'total_chargeback_count' => 0
         ];
 
-        $currentDate = Carbon::now();
-
-        $periodDays = $currentDate->copy()->subDays($user->withdrawal_period);
-
         try {
-            $getTotalPayments = CelcashPayments::where('receiver_user_id', $user->id)
-                ->where('status', 'payed_pix')
-                ->orWhere('status', 'authorized')
-                ->sum('value_to_receiver');
+            $currentDate = Carbon::now();
+            $periodDays = $currentDate->copy()->subDays($user->withdrawal_period);
 
-            $getTotalChargebacksPayments = CelcashPayments::where('receiver_user_id', $user->id)
-                ->where('status', 'chargeback')
-                ->orWhere('status', 'reversed')
-                ->sum('value_to_receiver');
+            // Agrupando consultas em uma única query para otimizar
+            $paymentData = CelcashPayments::where('receiver_user_id', $user->id)
+                ->selectRaw("
+                SUM(CASE WHEN status IN ('payed_pix', 'authorized') THEN value_to_receiver ELSE 0 END) as total_payments,
+                SUM(CASE WHEN status IN ('chargeback', 'reversed') THEN value_to_receiver ELSE 0 END) as total_chargebacks,
+                SUM(CASE WHEN status IN ('payed_pix', 'authorized') AND created_at >= ? THEN value_to_receiver ELSE 0 END) as total_pending_payments,
+                COUNT(CASE WHEN status IN ('chargeback', 'reversed') THEN 1 ELSE NULL END) as total_chargebacks_count
+            ", [$periodDays])
+                ->first();
 
-            if ($getTotalPayments <= 0 && $getTotalChargebacksPayments <= 0) {
-                return $returnData;
-            }
-
-            $getTotalWithdraws = WithdrawalRequests::where('user_id', $user->id)
-                ->where('status', 'effected')
-                ->orWhere('status', 'pending')
-                ->orWhere('status', 'approved_effect')
+            // Buscar retiradas (Withdraws) de forma otimizada
+            $totalWithdraws = WithdrawalRequests::where('user_id', $user->id)
+                ->whereIn('status', ['effected', 'pending', 'approved_effect'])
                 ->sum('withdrawal_amount');
 
-            $getTotalPendingPayments = CelcashPayments::where('receiver_user_id', $user->id)
-                ->where('created_at', '>=', $periodDays)
-                ->where('status', 'payed_pix')
-                ->orWhere('status', 'authorized')
-                ->sum('value_to_receiver');
+            // Conversão de centavos para reais
+            $totalPayments = $paymentData->total_payments / 100;
+            $totalChargebacks = $paymentData->total_chargebacks / 100;
+            $totalPendingPayments = $paymentData->total_pending_payments / 100;
+            $totalChargebacksCount = $paymentData->total_chargebacks_count;
 
-            $convertedTotalChargebacks = ($getTotalChargebacksPayments / 100);
+            // Cálculo do valor total disponível
+            $totalAmount = ($totalPayments - ($totalWithdraws / 100)) - $totalChargebacks;
+            $availablePayments = max(($totalAmount - $totalPendingPayments), 0);
 
-            $returnData['total_amount'] = (($getTotalPayments - $getTotalWithdraws) / 100) - $convertedTotalChargebacks;
-            $returnData['total_pending'] = $getTotalPendingPayments / 100;
-
-            $availablePayments = ((($getTotalPayments - $getTotalWithdraws) - $getTotalPendingPayments) / 100) - $convertedTotalChargebacks > 0 ? ((($getTotalPayments - $getTotalWithdraws) - $getTotalPendingPayments) / 100) - $convertedTotalChargebacks : 0;
-
+            // Atribuir valores ao array de retorno
+            $returnData['total_amount'] = $totalAmount;
+            $returnData['total_pending'] = $totalPendingPayments;
             $returnData['total_available'] = $availablePayments;
-            $returnData['total_chargeback'] = $convertedTotalChargebacks;
-        }
-        catch (\Exception $e) {
-            return $returnData;
+            $returnData['total_chargeback'] = $totalChargebacks;
+            $returnData['total_chargeback_count'] = $totalChargebacksCount;
+        } catch (\Exception $e) {
+            \Log::error('Erro ao calcular dados de saque: ' . $e->getMessage());
         }
 
         return $returnData;
     }
+
 }
