@@ -536,6 +536,7 @@ class CelCashController extends Controller
                     'celcash_payments.buyer_name',
                     'celcash_payments.buyer_email',
                     'celcash_payments.buyer_document_cpf',
+                    'celcash_payments.created_at',
                     'celcash_payments.status',
                     \DB::raw("(SELECT po.product_name
                    FROM celcash_payments_offers cpo
@@ -604,6 +605,7 @@ class CelCashController extends Controller
                     'celcash_payments.buyer_name',
                     'celcash_payments.buyer_email',
                     'celcash_payments.buyer_document_cpf',
+                    'celcash_payments.created_at',
                     'celcash_payments.status',
                     \DB::raw("(SELECT po.product_name
                    FROM celcash_payments_offers cpo
@@ -617,6 +619,47 @@ class CelCashController extends Controller
                    LIMIT 1) as buy_type")
                 ])
                 ->whereIn('celcash_payments.status', ['payed_pix', 'authorized'])
+                ->orderBy('celcash_payments.id', 'DESC')
+                ->paginate($itemsPerPage);
+
+            return Responses::SUCCESS('', $getPaidPayments);
+        }
+        catch (\Exception $e) {
+            return Responses::ERROR('Ocorreu um erro ao buscar os pedidos!', $e->getMessage(), -1100, 400);
+        }
+    }
+
+    public function chargebacks_payments(Request $request)
+    {
+        $itemsPerPage = $request->query('items_per_page', 10);
+
+        $user = Auth::user();
+
+        try {
+            $getPaidPayments = CelcashPayments::where('receiver_user_id', $user->id)
+                ->select([
+                    'celcash_payments.id',
+                    'celcash_payments.receiver_user_id',
+                    'celcash_payments.type',
+                    'celcash_payments.total_value',
+                    'celcash_payments.payday',
+                    'celcash_payments.buyer_name',
+                    'celcash_payments.buyer_email',
+                    'celcash_payments.buyer_document_cpf',
+                    'celcash_payments.created_at',
+                    'celcash_payments.status',
+                    \DB::raw("(SELECT po.product_name
+                   FROM celcash_payments_offers cpo
+                   JOIN products_offerings pof ON cpo.products_offerings_id = pof.id
+                   JOIN products po ON pof.product_id = po.id
+                   WHERE cpo.celcash_payments_id = celcash_payments.id
+                   LIMIT 1) as product_title"),
+                    \DB::raw("(SELECT cpo.type
+                   FROM celcash_payments_offers cpo
+                   WHERE cpo.celcash_payments_id = celcash_payments.id
+                   LIMIT 1) as buy_type")
+                ])
+                ->whereIn('celcash_payments.status', ['chargeback', 'reversed'])
                 ->orderBy('celcash_payments.id', 'DESC')
                 ->paginate($itemsPerPage);
 

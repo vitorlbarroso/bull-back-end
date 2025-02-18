@@ -119,6 +119,7 @@ Route::prefix('payments')->group(function() {
         Route::get('/unpaid_payments', [CelCashController::class, 'unpaid_payments']);
         Route::get('/all_payments', [CelCashController::class, 'all_payments']);
         Route::get('/paid_payments', [CelCashController::class, 'paid_payments']);
+        Route::get('/chargebacks_payments', [CelCashController::class, 'chargebacks_payments']);
     });
 });
 
