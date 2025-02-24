@@ -443,27 +443,23 @@ class CelCashController extends Controller
         }
 
         $data = [
-            'calendario' => [
-                'expiracao' => 86400
+            'customer' => [
+                'name' => $validatedData['customer_name'],
+                'email' => $validatedData['customer_email'],
+                'document' => [
+                    'number' => $validatedData['customer_document'],
+                    'type' => 'cpf'
+                ]
             ],
-            'valor' => [
-                'original' => ($totalPrice / 100),
-                'modalidadeAlteracao' => 0
-            ],
+            'price' => $totalPrice
         ];
 
         $generatePayment = CelCashService::generatePaymentPix($data);
 
         if (!empty($generatePayment['error'])) {
-            $generateToken = CelCashService::generateToken();
+            $errorMessage = $generatePayment['error']['message'];
 
-            $generatePayment = CelCashService::generatePaymentPix($data);
-
-            if (!empty($generatePayment['error'])){
-                $errorMessage = $generatePayment['error']['message'];
-
-                return Responses::ERROR('Ocorreu um erro ao gerar o pedido!', $generatePayment, 1400, 400);
-            }
+            return Responses::ERROR('Ocorreu um erro ao gerar o pedido!', $generatePayment, 1400, 400);
         }
 
         try {
@@ -471,7 +467,7 @@ class CelCashController extends Controller
                 $createCelcashPayments = CelcashPayments::create([
                     'receiver_user_id' => $getPrincipalOffer->product->user->id,
                     'buyer_user_id' => null,
-                    'galax_pay_id' => $generatePayment['txid'],
+                    'galax_pay_id' => $generatePayment['orderId'],
                     'type' => 'pix',
                     'installments' => 1,
                     'total_value' => $totalPrice,
@@ -486,8 +482,8 @@ class CelCashController extends Controller
 
                 $createPixDetails = CelcashPaymentsPixData::create([
                     'celcash_payments_id' => $createCelcashPayments->id,
-                    'qr_code' => $generatePayment['pixCopiaECola'],
-                    'reference' => $generatePayment['pixCopiaECola'],
+                    'qr_code' => $generatePayment['pix']['encodedImage'],
+                    'reference' => $generatePayment['pix']['payload'],
                 ]);
 
                 foreach ($offersData as $offer) {
@@ -504,17 +500,17 @@ class CelCashController extends Controller
         }
 
         $returnData = [
-            'galax_pay_id' => $generatePayment['txid'],
-            'qr_code' => $generatePayment['pixCopiaECola'],
+            'galax_pay_id' => $generatePayment['orderId'],
+            'qr_code' => $generatePayment['pix']['payload'],
             'upsell' => $getPrincipalOffer->sale_completed_page_url
         ];
 
-            Mail::to($validatedData['customer_email'])->send(new GeneratePixMail($validatedData['customer_name'], $generatePayment['pixCopiaECola']));
-        /*try {
+        try {
+            Mail::to($validatedData['customer_email'])->send(new GeneratePixMail($validatedData['customer_name'], $generatePayment['pix']['payload'], $getPrincipalOffer->product->email_support, ($totalPrice / 100), $generatePayment['orderId']));
         }
         catch (\Exception $e) {
             Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao tentar enviar um e-mail de pagamento |', [ 'ERRO' => $e->getMessage()]);
-        }*/
+        }
 
         return Responses::SUCCESS('Pedido pix gerado com sucesso!', $returnData, 200);
     }

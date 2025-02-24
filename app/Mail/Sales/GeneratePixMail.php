@@ -22,11 +22,17 @@ class GeneratePixMail extends Mailable
 
     public $name;
     public $pixCode;
+    public $support;
+    public $price;
+    public $id;
 
-    public function __construct($name, $pixCode)
+    public function __construct($name, $pixCode, $support, $price, $id)
     {
         $this->name = $name;
         $this->pixCode = $pixCode;
+        $this->support = $support;
+        $this->price = $price;
+        $this->id = $id;
     }
 
     /**
@@ -35,7 +41,7 @@ class GeneratePixMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('pix@plataformabulls.online', 'Bulls Pay'),
+            from: new Address('noreply@bullspay.com.br', 'Bulls Pay'),
             subject: 'Pague o seu PIX aqui!',
         );
     }
@@ -49,7 +55,10 @@ class GeneratePixMail extends Mailable
             html: 'mails.generate-pix',
             with: [
                 'name' => $this->name,
-                'pixCode' => $this->pixCode
+                'pixCode' => $this->pixCode,
+                'support' => $this->support,
+                'price' => $this->price,
+                'id' => $this->id,
             ],
         );
     }

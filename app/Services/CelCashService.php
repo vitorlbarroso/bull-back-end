@@ -226,11 +226,13 @@ class CelCashService
     static public function generatePaymentPix($data)
     {
         $validator = Validator::make($data, [
-            'calendario' => 'required|array',
-            'calendario.expiracao' => 'required|numeric',
-            'valor' => 'required|array',
-            'valor.original' => 'required|numeric',
-            'valor.modalidadeAlteracao' => 'required|integer',
+            'customer' => 'required|array',
+            'customer.name' => 'required|string',
+            'customer.email' => 'required|string',
+            'customer.document' => 'array',
+            'customer.document.number' => 'string',
+            'customer.document.type' => 'string',
+            'price' => 'required|numeric'
         ]);
 
         if ($validator->fails()) {
@@ -254,13 +256,6 @@ class CelCashService
             return $getToken;
 
         $validated['token'] = $getToken;
-
-        $getBankPix = self::getBankPixKey();
-
-        if ($getBankPix['error'])
-            return $getBankPix;
-
-        $validated['chave'] = $getBankPix->key;
 
         $generatePayment = PaymentsRequest::generatePaymentPix($validated);
 

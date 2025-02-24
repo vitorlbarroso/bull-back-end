@@ -11,65 +11,52 @@ class PaymentsRequest
     static public function generatePaymentPix($data)
     {
         $headers = [
-            'Authorization' => 'Bearer ' . $data['token']['token'],
+            'x-authorization-key' => $data['token']['token'],
             'Content-Type' => 'application/json'
         ];
 
         $body = [
-            'calendario' => [
-                'expiracao' => 86400
+            'isInfoProducts' => true,
+            'paymentMethod' => 'pix',
+            'customer' => [
+                'name' => $data['customer']['name'],
+                'email' => $data['customer']['email'],
+                'document' => [
+                    'number' => $data['customer']['document']['number'],
+                    'type' => $data['customer']['document']['type'],
+                ],
             ],
-            'valor' => [
-                'original' => $data['valor']['original'],
-                'modalidadeAlteracao' => 0
+            'items' => [
+                [
+                    'title' => 'Compra*BullsPay',
+                    'description' => 'Compra*BullsPay',
+                    'unitPrice' => $data['price'],
+                    'quantity' => 1,
+                    'tangible' => false,
+                ]
             ],
-            'chave' => $data['chave'],
+            'postback_url' => env('WEBHOOKS_BASE_URL')
         ];
 
         $baseUrl = env('CELCASH_BASE_URL');
-        $certPath = env('CELCASH_CERTIFICATE_PATH');
-        $certCrtPath = env('CELCASH_CERTIFICATE_CRT_PATH');
-        $certPassphrase = env('CELCASH_CERTIFICATE_PASSPHRASE');
 
         try {
             $createPayment = Http::WithHeaders($headers)
-                ->withOptions([
-                    'cert' => [$certPath, $certPassphrase],
-                    'verify' => false
-                ])
                 ->post(
-                    $baseUrl . '/cob',
+                    $baseUrl . '/transactions',
                     $body
                 );
 
             $response = $createPayment->json();
 
-            if (isset($response['message']) && $response['message'] === 'Unauthorized') {
-                CelCashService::generateToken();
-
-                $createPayment = Http::WithHeaders($headers)
-                    ->withOptions([
-                        'cert' => [$certPath, $certPassphrase],
-                        'verify' => false
-                    ])
-                    ->post(
-                        $baseUrl . '/cob',
-                        $body
-                    );
-
-                $response = $createPayment->json();
-
-                if (isset($response['message']) && $response['message'] === 'Unauthorized') {
-                    return [
-                        'error' => [
-                            'message' => "Erro ao gerar pagamento pix na voluti",
-                            'errorMessage' => $response,
-                            'errorCode' => 1100
-                        ]
-                    ];
-                }
-
-                return $response;
+            if (isset($response['error'])) {
+                return [
+                    'error' => [
+                        'message' => "Erro ao gerar pagamento pix na adquirente",
+                        'errorMessage' => $response,
+                        'errorCode' => 1100
+                    ]
+                ];
             }
 
             return $response;
