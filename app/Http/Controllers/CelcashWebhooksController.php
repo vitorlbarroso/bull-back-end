@@ -86,9 +86,7 @@ class CelcashWebhooksController extends Controller
     {
         $validatedData = $request->validated();
 
-        $data = $validatedData['data'];
-
-        $getTransaction = CelcashPayments::where('galax_pay_id', $data['txId'])
+        $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['orderId'])
             ->first();
 
         if (!$getTransaction) {
@@ -98,14 +96,48 @@ class CelcashWebhooksController extends Controller
         $isPayedStatus = false;
 
         if ($getTransaction->type == 'pix') {
-            switch ($data['status']) {
-                case 'LIQUIDATED':
-                    $status = 'payed_pix';
-                    $isPayedStatus = true;
-                    break;
+            if (
+                $validatedData['status'] == 'paid' ||
+                $validatedData['status'] == 'confirmed' ||
+                $validatedData['status'] == 'received' ||
+                $validatedData['status'] == 'received_in_cash' ||
+                $validatedData['status'] == 'captured'
+            ) {
+                $status = 'payed_pix';
+                $isPayedStatus = true;
+            }
 
-                default:
-                    $status = 'pending_pix';
+            if (
+                $validatedData['status'] == 'pending' ||
+                $validatedData['status'] == 'awaiting_payment' ||
+                $validatedData['status'] == 'waiting_payment'
+            ) {
+                $status = 'pending_pix';
+                $isPayedStatus = true;
+            }
+
+            if (
+                $validatedData['status'] == 'refund_requested' ||
+                $validatedData['status'] == 'refund_in_progress' ||
+                $validatedData['status'] == 'refunded'
+            ) {
+                $status = 'refunded';
+                $isPayedStatus = true;
+            }
+
+            if (
+                $validatedData['status'] == 'infraction' ||
+                $validatedData['status'] == 'chargeback_requested' ||
+                $validatedData['status'] == 'chargeback' ||
+                $validatedData['status'] == 'chargeback_dispute' ||
+                $validatedData['status'] == 'prechargeback' ||
+                $validatedData['status'] == 'awaiting_chargeback_reversal:' ||
+                $validatedData['status'] == 'dunning_requested' ||
+                $validatedData['status'] == 'dunning_received' ||
+                $validatedData['status'] == 'awaiting_risk_analysis'
+            ) {
+                $status = 'chargeback';
+                $isPayedStatus = true;
             }
         }
 

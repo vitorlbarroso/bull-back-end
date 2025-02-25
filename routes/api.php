@@ -138,7 +138,7 @@ Route::prefix('withdraws')->middleware('auth:sanctum')->group(function() {
 });
 
 Route::prefix('webhooks')->group(function() {
-    Route::prefix('voluti')->middleware('celcash.webhook')->group(function() {
+    Route::prefix('reflow')->middleware('celcash.webhook')->group(function() {
         Route::post('/documents', [CelcashWebhooksController::class, 'documents']);
         Route::post('/transactions', [CelcashWebhooksController::class, 'transactions']);
     });
