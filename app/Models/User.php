@@ -61,9 +61,9 @@ class User extends Authenticatable
         'account_type' => UserAccountTypeEnum::class,
     ];
 
-    public function profile_media(): HasOne
+    public function profile_media(): BelongsTo
     {
-        return $this->hasOne(Media::class, 'profile_media_id');
+        return $this->belongsTo(Media::class, 'profile_media_id');
     }
 
     public function medias(): BelongsToMany

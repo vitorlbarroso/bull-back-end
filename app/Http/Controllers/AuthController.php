@@ -46,6 +46,8 @@ class AuthController extends Controller
     {
         $user = Auth::user();
 
+        $user->load('profile_media');
+
         $getPayConfigsPendences = UserService::getPayConfigsPendences();
         $user['pay_configs_pendences'] = $getPayConfigsPendences;
 

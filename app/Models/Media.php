@@ -21,9 +21,9 @@ class Media extends Model
         'is_deleted',
     ];
 
-    public function user_profile_media(): BelongsTo
+    public function user_profile_media(): HasOne
     {
-        return $this->belongsTo(User::class);
+        return $this->hasOne(User::class, 'profile_media_id');
     }
 
     public function user(): HasOne
