@@ -54,9 +54,9 @@ class AuthController extends Controller
         $getUserTotalSales = UserPaymentsDataService::getUserTotalSalesInAllPeriod();
         $user['total_sales'] = $getUserTotalSales / 100;
 
-        $this->getOrSetCache($request->header('x-transaction-id'),'user_' . Auth::id() . '_current_', function () {
+        /*$this->getOrSetCache($request->header('x-transaction-id'),'user_' . Auth::id() . '_current_', function () {
             return Auth::user();
-        }, 600); // Cache por 10 minutos (600 segundos)
+        }, 600);*/
 
         return Responses::SUCCESS("Usuário autenticado", $user);
     }

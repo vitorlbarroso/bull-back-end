@@ -15,6 +15,7 @@ use App\Models\CelcashPaymentsGatewayData;
 use App\Models\CelcashPaymentsOffers;
 use App\Models\CelcashPaymentsPixData;
 use App\Models\ProductOffering;
+use App\Models\User;
 use App\Models\UserCelcashCnpjCredentials;
 use App\Models\UserCelcashCnpjDocuments;
 use App\Models\UserCelcashCpfCredentials;
@@ -195,6 +196,8 @@ class CelCashController extends Controller
                 'company_document_media' => $validatedData['company_document'],
                 'document_status' => 'analyzing'
             ]);
+
+            User::where('id', $user->id)->update(['account_type' => 'PJ']);
         }
         catch(\Exception $e) {
             Log::error('Ocorreu um erro ao tentar salvar os documentos de um usuário na database: ' . $e->getMessage());

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\UserCelcashCnpjCredentials;
 use App\Models\UserCelcashCpfCredentials;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,10 +20,10 @@ class UserService
         if ($user->account_type->value == 'PF') {
             $getCredentials = UserCelcashCpfCredentials::where('user_id', $user->id)->with('documents')->first();
         } else {
-            $getCredentials = UserCelcashCpfCredentials::where('user_id', $user->id)->with('documents')->first();
+            $getCredentials = UserCelcashCnpjCredentials::where('user_id', $user->id)->with('documents')->first();
         }
 
-        $specialDocument = $user->account_type->value == 'PF' ? 'rg_address' : 'company_document';
+        $specialDocument = $user->account_type->value == 'PF' ? 'rg_address_media' : 'company_document_media';
 
         if (!$getCredentials) {
             return [
