@@ -137,17 +137,8 @@ class CelCashService
 
         $validated = $validator->validated();
 
-        /* Buscando token */
-        $getToken = self::getToken();
-
-        if ($getToken['error'])
-            return $getToken;
-
         /* Setando novos valores dentro do array de valores validados */
         $user = Auth::user();
-
-        $validated['token'] = $getToken;
-        $validated['user'] = $user;
 
         /* Fazendo requisição para criação de usuário */
         $createUser = CpfUsersRequests::createUserCpf($validated);

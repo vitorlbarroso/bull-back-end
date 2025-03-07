@@ -14,18 +14,14 @@ class UserCelcashCpfDocuments extends Model
         'user_cpf_credentials_id',
         'mother_name',
         'birth_date',
-        'monthly_income',
-        'about',
-        'social_media_link',
         'cnh',
         'cnh_selfie',
         'cnh_picture',
         'cnh_address',
         'rg',
-        'rg_address',
-        'rg_front',
-        'rg_back',
-        'rg_address',
+        'rg_address_media',
+        'rg_front_media',
+        'rg_back_media',
         'document_status',
         'document_refused_reason',
     ];
@@ -33,5 +29,20 @@ class UserCelcashCpfDocuments extends Model
     public function credentials() : BelongsTo
     {
         return $this->belongsTo(UserCelcashCpfCredentials::class, 'user_cpf_credentials_id');
+    }
+
+    public function rg_front() : BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'rg_front');
+    }
+
+    public function rg_back() : BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'rg_back');
+    }
+
+    public function rg_selfie() : BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'rg_selfie');
     }
 }

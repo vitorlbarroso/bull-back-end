@@ -54,56 +54,6 @@ class CelCashController extends Controller
             return Responses::ERROR('Ocorreu um erro ao verificar se o usuário já possui um cadastro CPF!', null, -1100, 400);
         }
 
-        /* Requisição para criar usuário */
-        $createUserCpf = CelCashService::createUserCpf($validatedData);
-
-        /* Validando erros */
-        if (!empty($createUserCpf['error'])) {
-            $errorMessage = $createUserCpf['error']['message'];
-
-            $createUserCpfErrorLog = CelcashCreateAccountsErrors::create([
-                'title' => 'Erro ao criar usuário!',
-                'request_infos' => json_encode($validatedData),
-                'error' => $errorMessage
-            ]);
-
-            if ($errorMessage == 'Itens insuficientes') {
-                return Responses::ERROR('Campos obrigatórios para criação do usuário CPF não foram localizados!', $createUserCpf['error']['errors'], 1100, 400);
-            }
-
-            if (
-                $errorMessage == 'Token não localizado ou expirado' ||
-                $errorMessage == 'Erro ao buscar token celcash' ||
-                $errorMessage == 'Access token inválido.'
-            ) {
-                $generateToken = CelCashService::generateToken();
-
-                $createUserCpf = CelCashService::createUserCpf($validatedData);
-
-                if (!empty($createUserCpf['error'])) {
-                    return Responses::ERROR('Ocorreu um erro interno relacionado a tokens!', $errorMessage, 1200, 400);
-                }
-            }
-
-            if ($errorMessage == 'Erro ao cadastrar usuário cpf na celcash') {
-                return Responses::ERROR('Ocorreu um erro interno na criação da conta!', $errorMessage, 1300, 400);
-            }
-
-            /* Validando erro de documento já sendo utilizado */
-            if ($errorMessage == 'O documento informado já está sendo utilizado por outra empresa.') {
-
-                /*
-                 *
-                 * ESCREVER A LÓGICA PARA QUANDO O DOCUMENTO JÁ ESTIVER SENDO UTILIZADO
-                 *
-                 * */
-
-                return Responses::ERROR('Ocorreu um erro interno na criação do usuário!', $errorMessage, 1400, 400);
-            }
-
-            return Responses::ERROR('Ocorreu um erro inesperado durante o fluxo de criação!', $errorMessage, 1500, 400);
-        }
-
         /* Salvando os dados do usuário na base de dados */
         try {
             $createUser = UserCelcashCpfCredentials::create([
@@ -112,25 +62,20 @@ class CelCashController extends Controller
                 'document' => $validatedData['document'],
                 'phone' => $validatedData['phone'],
                 'email' => $user->email,
-                'soft_descriptor' => 'CompraFlamePay',
+                'soft_descriptor' => 'CompraBullsPay',
                 'address_zipcode' => $validatedData['address_zipcode'],
                 'address_street' => $validatedData['address_street'],
                 'address_number' => $validatedData['address_number'],
                 'address_neighborhood' => $validatedData['address_neighborhood'],
                 'address_city' => $validatedData['address_city'],
                 'address_state' => $validatedData['address_state'],
-                'galax_pay_id' => $createUserCpf['Company']['galaxPayId'],
-                'api_auth_galax_id' => $createUserCpf['Company']['ApiAuth']['galaxId'],
-                'api_auth_galax_hash' => $createUserCpf['Company']['ApiAuth']['galaxHash'],
-                'api_auth_public_token' => $createUserCpf['Company']['ApiAuth']['publicToken'],
-                'api_auth_confirm_hash_webhook' => $createUserCpf['Company']['ApiAuth']['confirmHashWebhook'],
             ]);
         }
         catch(\Exception $e) {
-            Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao salvar os dados de um usuário CPF criado na CELCASH no Banco de Dados |', [ 'ERRO' => $e->getMessage()]);
+            Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao salvar os dados de um usuário CPF no Banco de Dados |', [ 'ERRO' => $e->getMessage()]);
 
             CelcashCreateAccountsErrors::create([
-                'title' => 'Erro ao salvar dados de usuário cadastrado na celcash!',
+                'title' => 'Erro ao salvar dados de usuário cadastrado!',
                 'request_infos' => json_encode($validatedData),
                 'error' => $e->getMessage()
             ]);
@@ -138,47 +83,17 @@ class CelCashController extends Controller
             return Responses::ERROR('Ocorreu um erro imprevisto durante a criação da conta do usuário!', null, -1200, 400);
         }
 
-        /* Enviar documentos */
-        $getToken = CelCashService::getSubaccountToken($createUserCpf['Company']['ApiAuth']['galaxId'], $createUserCpf['Company']['ApiAuth']['galaxHash']);
-
-        if (!empty($getToken['error'])) {
-            return Responses::ERROR('Usuário cadastrado. Documentos não foram enviados para análise!', $getToken, 1600, 200);
-        }
-
-        sleep(10);
-
-        $sendDocuments = CpfUsersRequests::sendCpfDocuments($getToken['access_token'], [
-            'mother_name' => $validatedData['mother_name'],
-            'birth_date' => $validatedData['birth_date'],
-            'monthly_income' => $validatedData['monthly_income'],
-            'about' => $validatedData['about'],
-            'social_media_link' => $validatedData['social_media_link'],
-            'rg_selfie' => $validatedData['rg_selfie'],
-            'rg_front' => $validatedData['rg_front'],
-            'rg_back' => $validatedData['rg_back'],
-            'rg_address' => $validatedData['rg_address'],
-        ]);
-
-        if (!empty($sendDocuments['error'])) {
-            Log::error('Ocorreu um erro ao enviar os documentos: ', ['error' => $sendDocuments]);
-
-            return Responses::ERROR('Usuário cadastrado. Documentos não foram enviados para análise!', $sendDocuments, 1700, 200);
-        }
-
         try {
             $createCpfDocuments = UserCelcashCpfDocuments::create([
                 'user_cpf_credentials_id' => $createUser->id,
                 'mother_name' => $validatedData['mother_name'],
                 'birth_date' => $validatedData['birth_date'],
-                'monthly_income' => $validatedData['monthly_income'],
-                'about' => $validatedData['about'],
-                'social_media_link' => $validatedData['social_media_link'],
                 'cnh' => 'not_send',
                 'rg' => 'send',
-                'rg_address' => 'Enviado',
-                'rg_front' => 'Enviado',
-                'rg_back' => 'Enviado',
-                'rg_selfie' => 'Enviado',
+                'rg_address_media' => $validatedData['rg_front'],
+                'rg_front_media' => $validatedData['rg_front'],
+                'rg_back_media' => $validatedData['rg_back'],
+                'rg_selfie' => $validatedData['rg_selfie'],
                 'document_status' => 'analyzing'
             ]);
         }

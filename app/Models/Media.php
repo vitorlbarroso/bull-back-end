@@ -40,4 +40,19 @@ class Media extends Model
     {
         return $this->hasOne(Checkout::class, 'banner_id');
     }
+
+    public function rg_front() : HasOne
+    {
+        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_front');
+    }
+
+    public function rg_back() : HasOne
+    {
+        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_back');
+    }
+
+    public function rg_selfie() : HasOne
+    {
+        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_selfie');
+    }
 }

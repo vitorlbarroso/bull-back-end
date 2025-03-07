@@ -33,13 +33,9 @@ class CreateUserCpfRequest extends FormRequest
             'address_state' => 'required|string',
             'mother_name' => 'required|string',
             'birth_date' => 'required|string',
-            'monthly_income' => 'required|integer',
-            'about' => 'required|string',
-            'social_media_link' => 'required|string',
-            'rg_selfie' => 'required|string',
-            'rg_front' => 'required|string',
-            'rg_back' => 'required|string',
-            'rg_address' => 'required|string',
+            'rg_selfie' => 'required',
+            'rg_front' => 'required',
+            'rg_back' => 'required'
         ];
     }
 
