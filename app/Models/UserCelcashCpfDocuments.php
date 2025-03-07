@@ -33,16 +33,16 @@ class UserCelcashCpfDocuments extends Model
 
     public function rg_front() : BelongsTo
     {
-        return $this->belongsTo(Media::class, 'rg_front');
+        return $this->belongsTo(Media::class, '_media');
     }
 
     public function rg_back() : BelongsTo
     {
-        return $this->belongsTo(Media::class, 'rg_back');
+        return $this->belongsTo(Media::class, 'rg_back_media');
     }
 
     public function rg_selfie() : BelongsTo
     {
-        return $this->belongsTo(Media::class, 'rg_selfie');
+        return $this->belongsTo(Media::class, 'rg_selfie_media');
     }
 }

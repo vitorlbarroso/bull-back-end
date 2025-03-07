@@ -35,18 +35,15 @@ class CreateUserCnpjRequest extends FormRequest
             'address_neighborhood' => 'required|string',
             'address_city' => 'required|string',
             'address_state' => 'required|string',
-            'last_contract' => 'required_if:type_company_cnpj,ltda,eireli,slu|string',
             'cnpj_card' => 'required_if:type_company_cnpj,mei,individualEntrepreneur|string',
-            'monthly_income' => 'required|integer',
-            'about' => 'required|string',
-            'social_media_link' => 'required|string',
             'responsible_document_cpf' => 'required|string',
             'responsible_name' => 'required|string',
             'mother_name' => 'required|string',
             'birth_date' => 'required|string',
-            'rg_selfie' => 'required|string',
-            'rg_front' => 'required|string',
-            'rg_back' => 'required|string',
+            'rg_selfie' => 'required',
+            'rg_front' => 'required',
+            'rg_back' => 'required',
+            'company_document' => 'required',
         ];
     }
 

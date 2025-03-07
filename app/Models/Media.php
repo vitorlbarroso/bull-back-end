@@ -43,16 +43,37 @@ class Media extends Model
 
     public function rg_front() : HasOne
     {
-        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_front');
+        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_front_media');
     }
 
     public function rg_back() : HasOne
     {
-        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_back');
+        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_back_media');
     }
 
     public function rg_selfie() : HasOne
     {
-        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_selfie');
+        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_selfie_media');
+    }
+
+
+    public function rg_front_company() : HasOne
+    {
+        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_front_media');
+    }
+
+    public function rg_back_company() : HasOne
+    {
+        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_back_media');
+    }
+
+    public function rg_selfie_company() : HasOne
+    {
+        return $this->hasOne(UserCelcashCpfDocuments::class, 'rg_selfie_media');
+    }
+
+    public function company_document() : HasOne
+    {
+        return $this->hasOne(UserCelcashCpfDocuments::class, 'company_document_media');
     }
 }

@@ -25,13 +25,34 @@ class UserCelcashCnpjDocuments extends Model
         'cnh_selfie',
         'cnh_picture',
         'rg',
-        'rg_selfie',
-        'rg_front',
-        'rg_back',
+        'rg_selfie_media',
+        'rg_front_media',
+        'rg_back_media',
+        'company_document_media',
     ];
 
     public function credentials() : BelongsTo
     {
         return $this->belongsTo(UserCelcashCnpjCredentials::class, 'users_cnpj_credentials_id');
+    }
+
+    public function rg_front() : BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'rg_front_media');
+    }
+
+    public function rg_back() : BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'rg_back_media');
+    }
+
+    public function rg_selfie() : BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'rg_selfie_media');
+    }
+
+    public function company_document() : BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'company_document_media');
     }
 }

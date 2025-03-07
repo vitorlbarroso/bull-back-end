@@ -129,56 +129,6 @@ class CelCashController extends Controller
             return Responses::ERROR('Ocorreu um erro ao verificar se o usuário já possui um cadastro CNPJ!', null, -1100, 400);
         }
 
-        /* Requisição para criar usuário */
-        $createUserCnpj = CelCashService::createUserCnpj($validatedData);
-
-        /* Validando erros */
-        if (!empty($createUserCnpj['error'])) {
-            $errorMessage = $createUserCnpj['error']['message'];
-
-            $createUserCnpjErrorLog = CelcashCreateAccountsErrors::create([
-                'title' => 'Erro ao criar usuário!',
-                'request_infos' => json_encode($validatedData),
-                'error' => $errorMessage
-            ]);
-
-            if ($errorMessage == 'Itens insuficientes') {
-                return Responses::ERROR('Campos obrigatórios para criação do usuário CNPJ não foram localizados!', $createUserCnpj['error']['errors'], 1100, 400);
-            }
-
-            if (
-                $errorMessage == 'Token não localizado ou expirado' ||
-                $errorMessage == 'Erro ao buscar token celcash' ||
-                $errorMessage == 'Access token inválido.'
-            ) {
-                $generateToken = CelCashService::generateToken();
-
-                $createUserCpf = CelCashService::createUserCpf($validatedData);
-
-                if (!empty($createUserCpf['error'])) {
-                    return Responses::ERROR('Ocorreu um erro interno relacionado a tokens!', $errorMessage, 1200, 400);
-                }
-            }
-
-            if ($errorMessage == 'Erro ao cadastrar usuário cnpj na celcash') {
-                return Responses::ERROR('Ocorreu um erro interno na criação da conta!', $errorMessage, 1300, 400);
-            }
-
-            /* Validando erro de documento já sendo utilizado */
-            if ($errorMessage == 'O documento informado já está sendo utilizado por outra empresa.') {
-
-                /*
-                 *
-                 * ESCREVER A LÓGICA PARA QUANDO O DOCUMENTO JÁ ESTIVER SENDO UTILIZADO
-                 *
-                 * */
-
-                return Responses::ERROR('Ocorreu um erro interno na criação do usuário!', $errorMessage, 1400, 400);
-            }
-
-            return Responses::ERROR('Ocorreu um erro inesperado durante o fluxo de criação!', $errorMessage, 1500, 400);
-        }
-
         /* Salvando os dados do usuário na base de dados */
         try {
             $createUser = UserCelcashCnpjCredentials::create([
@@ -189,7 +139,7 @@ class CelCashController extends Controller
                 'name_display' => $validatedData['name_display'],
                 'phone' => $validatedData['phone'],
                 'email' => $user->email,
-                'soft_descriptor' => 'CompraFlamePay',
+                'soft_descriptor' => 'CompraBullsPay',
                 'cnae' => $validatedData['cnae'],
                 'type_company_cnpj' => $validatedData['type_company_cnpj'],
                 'address_zipcode' => $validatedData['address_zipcode'],
@@ -198,18 +148,13 @@ class CelCashController extends Controller
                 'address_neighborhood' => $validatedData['address_neighborhood'],
                 'address_city' => $validatedData['address_city'],
                 'address_state' => $validatedData['address_state'],
-                'galax_pay_id' => $createUserCnpj['Company']['galaxPayId'],
-                'api_auth_galax_id' => $createUserCnpj['Company']['ApiAuth']['galaxId'],
-                'api_auth_galax_hash' => $createUserCnpj['Company']['ApiAuth']['galaxHash'],
-                'api_auth_public_token' => $createUserCnpj['Company']['ApiAuth']['publicToken'],
-                'api_auth_confirm_hash_webhook' => $createUserCnpj['Company']['ApiAuth']['confirmHashWebhook'],
             ]);
         }
         catch(\Exception $e) {
-            Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao salvar os dados de um usuário CNPJ criado na CELCASH no Banco de Dados |', [ 'ERRO' => $e->getMessage()]);
+            Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao salvar os dados de um usuário CNPJ criado no Banco de Dados |', [ 'ERRO' => $e->getMessage()]);
 
             CelcashCreateAccountsErrors::create([
-                'title' => 'Erro ao salvar dados de usuário cadastrado na celcash!',
+                'title' => 'Erro ao salvar dados de usuário cadastrado!',
                 'request_infos' => json_encode($validatedData),
                 'error' => $e->getMessage()
             ]);
@@ -217,47 +162,25 @@ class CelCashController extends Controller
             return Responses::ERROR('Ocorreu um erro imprevisto durante a criação da conta do usuário!', null, -1200, 400);
         }
 
-        /* Enviar documentos */
-        $getToken = CelCashService::getSubaccountToken($createUserCnpj['Company']['ApiAuth']['galaxId'], $createUserCnpj['Company']['ApiAuth']['galaxHash']);
-
-        if (!empty($getToken['error'])) {
-            return Responses::ERROR('Usuário cadastrado. Documentos não foram enviados para análise!', $getToken, 1600, 200);
-        }
-
-        sleep(10);
-
-        $documentType = $validatedData['type_company_cnpj'] == 'eireli' || $validatedData['type_company_cnpj'] == 'ltda' || $validatedData['type_company_cnpj'] == 'slu' ? 'last_contract' : 'cnpj_card';
-        $documentValue = $validatedData['type_company_cnpj'] == 'eireli' || $validatedData['type_company_cnpj'] == 'ltda' || $validatedData['type_company_cnpj'] == 'slu' ? $validatedData['last_contract'] : $validatedData['cnpj_card'];
+        $documentType = 'cnpj_card';
+        $documentValue = 'cnpj_card';
 
         $documentsData = [
-            'monthly_income' => $validatedData['monthly_income'],
-            'about' => $validatedData['about'],
-            'social_media_link' => $validatedData['social_media_link'],
             'responsible_document_cpf' => $validatedData['responsible_document_cpf'],
             'responsible_name' => $validatedData['responsible_name'],
             'mother_name' => $validatedData['mother_name'],
             'birth_date' => $validatedData['birth_date'],
             'type_company_cnpj' => $validatedData['type_company_cnpj'],
             $documentType => $documentValue,
-            'rg_selfie' => $validatedData['rg_selfie'],
-            'rg_front' => $validatedData['rg_front'],
-            'rg_back' => $validatedData['rg_back'],
+            'rg_address_media' => $validatedData['rg_selfie'],
+            'rg_front_media' => $validatedData['rg_front'],
+            'rg_back_media' => $validatedData['rg_back'],
+            'company_document_media' => $validatedData['company_document'],
         ];
-
-        $sendDocuments = CnpjUsersRequests::sendCnpjDocuments($getToken['access_token'], $documentsData);
-
-        if (!empty($sendDocuments['error'])) {
-            Log::error('Ocorreu um erro ao enviar os documentos: ', ['error' => $sendDocuments]);
-
-            return Responses::ERROR('Usuário cadastrado. Documentos não foram enviados para análise!', $sendDocuments, 1700, 200);
-        }
 
         try {
             $createCnpjDocuments = UserCelcashCnpjDocuments::create([
                 'user_cnpj_credentials_id' => $createUser->id,
-                'monthly_income' => $validatedData['monthly_income'],
-                'about' => $validatedData['about'],
-                'social_media_link' => $validatedData['social_media_link'],
                 'responsible_document_cpf' => $validatedData['responsible_document_cpf'],
                 'responsible_name' => $validatedData['responsible_name'],
                 'mother_name' => $validatedData['mother_name'],
@@ -266,9 +189,10 @@ class CelCashController extends Controller
                 'company_document' => $validatedData['document_cnpj'],
                 'cnh' => 'not_send',
                 'rg' => 'send',
-                'rg_front' => 'Enviado',
-                'rg_back' => 'Enviado',
-                'rg_selfie' => 'Enviado',
+                'rg_address_media' => $validatedData['rg_selfie'],
+                'rg_front_media' => $validatedData['rg_front'],
+                'rg_back_media' => $validatedData['rg_back'],
+                'company_document_media' => $validatedData['company_document'],
                 'document_status' => 'analyzing'
             ]);
         }
