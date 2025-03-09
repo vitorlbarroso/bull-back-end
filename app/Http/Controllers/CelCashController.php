@@ -274,16 +274,6 @@ class CelCashController extends Controller
         $generatePayday->modify('+2 day');
         $formatedPayday = $generatePayday->format('Y-m-d');
 
-        if ($getPrincipalOffer->product->user->account_type->value == 'PF') {
-            $getGalaxPayId = UserCelcashCpfCredentials::where('user_id', $getPrincipalOffer->product->user->id)
-                ->select(['galax_pay_id'])
-                ->first();
-        } else {
-            $getGalaxPayId = UserCelcashCnpjCredentials::where('user_id', $getPrincipalOffer->product->user->id)
-                ->select(['galax_pay_id'])
-                ->first();
-        }
-
         $data = [
             'customer' => [
                 'name' => $validatedData['customer_name'],
