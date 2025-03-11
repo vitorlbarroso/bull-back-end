@@ -197,7 +197,7 @@ class CheckoutService
             'banner_id' => $validatedData['banner']['id'] ?? null,
             'banner_display' => $validatedData['banner']['display'] ?? true,
             'background_color' => $validatedData['configs']['background_color'],
-            'checkout_style' => $validatedData['configs']['checkout_style'],
+            'checkout_style' => $validatedData['checkout_style'],
             // Add other fields as necessary
         ];
 
