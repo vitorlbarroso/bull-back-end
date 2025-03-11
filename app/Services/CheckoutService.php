@@ -70,7 +70,7 @@ class CheckoutService
             ])
                 ->where('checkout_hash', $hashIdentifier)
                 ->where('is_deleted', 0)
-                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display')
+                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style')
                 ->first();
             return $this->formatCheckoutData($checkout);
         } catch (\Exception $e) {
@@ -87,6 +87,7 @@ class CheckoutService
                 'checkout_title' => $checkout->checkout_title,
                 'order_bump_title' => $checkout->order_bump_title,
                 'exit_popup' => $checkout->exit_popup,
+                'checkout_style' => $checkout->checkout_style,
             ],
             'offer_data' => [
                 'id' => $checkout->offer->id,
@@ -196,6 +197,7 @@ class CheckoutService
             'banner_id' => $validatedData['banner']['id'] ?? null,
             'banner_display' => $validatedData['banner']['display'] ?? true,
             'background_color' => $validatedData['configs']['background_color'],
+            'checkout_style' => $validatedData['configs']['checkout_style'],
             // Add other fields as necessary
         ];
 

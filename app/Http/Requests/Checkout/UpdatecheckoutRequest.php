@@ -32,6 +32,7 @@ class UpdatecheckoutRequest extends FormRequest
             'banner.display' => 'boolean',
             'banner.id' => 'nullable|integer',
             'configs.background_color' => 'string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'checkout_style' => 'integer',
         ];
     }
 
