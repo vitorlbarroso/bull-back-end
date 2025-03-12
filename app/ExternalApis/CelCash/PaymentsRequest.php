@@ -35,7 +35,7 @@ class PaymentsRequest
                     'tangible' => false,
                 ]
             ],
-            'postback_url' => env('WEBHOOKS_BASE_URL')
+            'postbackUrl' => env('WEBHOOKS_BASE_URL')
         ];
 
         $baseUrl = env('CELCASH_BASE_URL');
