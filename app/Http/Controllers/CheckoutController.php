@@ -191,7 +191,7 @@ class CheckoutController extends Controller
                 })
                 ->where('checkout_hash', $checkoutHash)
                 ->where('is_deleted', 0)
-                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display')
+                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style')
                 ->first();
 
             if (!$getCheckout) {
