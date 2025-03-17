@@ -8,6 +8,7 @@ use App\Http\Requests\Authentication\ForgotPasswordRequest;
 use App\Http\Requests\Authentication\UserLoginRequest;
 use App\Http\Requests\Authentication\UserRegisterRequest;
 use App\Mail\Authentication\RecoverPasswordMail;
+use App\Models\Configuration;
 use App\Models\ForgotPassword;
 use App\Services\UserPaymentsDataService;
 use App\Services\UserService;
@@ -70,6 +71,42 @@ class AuthController extends Controller
         ];
 
         try {
+            $configsData = Configuration::first();
+
+            if ($configsData) {
+                if ($configsData->default_withdraw_period) {
+                    $data['withdrawal_period'] = $configsData->default_withdraw_period;
+                }
+
+                if ($configsData->default_withdraw_tax) {
+                    $data['withdrawal_tax'] = $configsData->default_withdraw_tax;
+                }
+
+                if ($configsData->default_pix_tax_value) {
+                    $data['pix_tax_value'] = $configsData->default_pix_tax_value;
+                }
+
+                if ($configsData->default_pix_money_tax_value) {
+                    $data['pix_money_tax_value'] = $configsData->default_pix_money_tax_value;
+                }
+
+                if ($configsData->default_card_tax_value) {
+                    $data['card_tax_value'] = $configsData->default_card_tax_value;
+                }
+
+                if ($configsData->default_card_money_tax_value) {
+                    $data['card_money_tax_value'] = $configsData->default_card_money_tax_value;
+                }
+
+                if ($configsData->default_cash_in_adquirer) {
+                    $data['cash_in_adquirer_name'] = $configsData->default_cash_in_adquirer;
+                }
+
+                if ($configsData->default_cash_out_adquirer) {
+                    $data['cash_out_adquirer_name'] = $configsData->default_cash_out_adquirer;
+                }
+            }
+
             $createUser = User::create($data);
 
             $token = $createUser->createToken('auth_token')->plainTextToken;

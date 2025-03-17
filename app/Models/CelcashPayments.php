@@ -28,6 +28,7 @@ class CelcashPayments extends Model
         'description',
         'status',
         'reason_denied',
+        'adquirer',
     ];
 
     public function receiver_user_id() : BelongsTo

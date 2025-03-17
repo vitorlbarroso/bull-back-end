@@ -37,7 +37,14 @@ class User extends Authenticatable
         'last_login',
         'tax_value',
         'is_blocked',
-        'withdrawal_period'
+        'withdrawal_period',
+        'withdrawal_tax',
+        'pix_tax_value',
+        'pix_money_tax_value',
+        'card_tax_value',
+        'card_money_tax_value',
+        'cash_in_adquirer_name',
+        'cash_out_adquirer_name',
     ];
 
     /**
