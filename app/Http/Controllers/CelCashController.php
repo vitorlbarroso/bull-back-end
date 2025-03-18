@@ -311,7 +311,7 @@ class CelCashController extends Controller
 
             $returnData = [
                 'galax_pay_id' => $generatePayment['qrcode']['reference_code'],
-                'qr_code' => $generatePayment['qrcode']['image_base64'],
+                'qr_code' => $generatePayment['qrcode']['content'],
                 'upsell' => $getPrincipalOffer->sale_completed_page_url
             ];
         }
@@ -352,7 +352,7 @@ class CelCashController extends Controller
                 if ($adquirerName == 'zendry') {
                     $createPixDetails = CelcashPaymentsPixData::create([
                         'celcash_payments_id' => $createCelcashPayments->id,
-                        'qr_code' => $generatePayment['qrcode']['image_base64'],
+                        'qr_code' => $generatePayment['qrcode']['content'],
                         'reference' => $generatePayment['qrcode']['content'],
                     ]);
                 }
