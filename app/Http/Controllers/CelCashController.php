@@ -290,6 +290,7 @@ class CelCashController extends Controller
         if ($getPrincipalOffer->product->user->cash_in_adquirer_name == 'reflow' || $getPrincipalOffer->product->user->cash_in_adquirer_name == null) {
             $generatePayment = CelCashService::generatePaymentPix($data);
             $unicId = $generatePayment['orderId'];
+            $pixReference = $generatePayment['pix']['payload'];
 
             $adquirerName = 'reflow';
 
@@ -307,6 +308,7 @@ class CelCashController extends Controller
 
             if (isset($generatePayment['qrcode'])) {
                 $unicId = $generatePayment['qrcode']['reference_code'];
+                $pixReference = $generatePayment['qrcode']['content'];
 
                 $adquirerName = 'zendry';
 
@@ -325,7 +327,7 @@ class CelCashController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($getPrincipalOffer, $generatePayment, $totalPrice, $calculateTax, $formatedPayday, $validatedData, $offersData, $adquirerName, $unicId) {
+            DB::transaction(function () use ($getPrincipalOffer, $pixReference, $generatePayment, $totalPrice, $calculateTax, $formatedPayday, $validatedData, $offersData, $adquirerName, $unicId) {
                 $createCelcashPayments = CelcashPayments::create([
                     'receiver_user_id' => $getPrincipalOffer->product->user->id,
                     'buyer_user_id' => null,
@@ -354,8 +356,8 @@ class CelCashController extends Controller
                 if ($adquirerName == 'zendry') {
                     $createPixDetails = CelcashPaymentsPixData::create([
                         'celcash_payments_id' => $createCelcashPayments->id,
-                        'qr_code' => $generatePayment['qrcode']['content'],
-                        'reference' => $generatePayment['qrcode']['content'],
+                        'qr_code' => $pixReference,
+                        'reference' => $pixReference,
                     ]);
                 }
 
@@ -373,7 +375,7 @@ class CelCashController extends Controller
         }
 
         try {
-            Mail::to($validatedData['customer_email'])->send(new GeneratePixMail($validatedData['customer_name'], $generatePayment['pix']['payload'], $getPrincipalOffer->product->email_support, ($totalPrice / 100), $generatePayment['orderId']));
+            Mail::to($validatedData['customer_email'])->send(new GeneratePixMail($validatedData['customer_name'], $pixReference, $getPrincipalOffer->product->email_support, ($totalPrice / 100), $generatePayment['orderId']));
         }
         catch (\Exception $e) {
             Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao tentar enviar um e-mail de pagamento |', [ 'ERRO' => $e->getMessage()]);
