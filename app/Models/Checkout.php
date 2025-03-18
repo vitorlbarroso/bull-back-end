@@ -27,7 +27,9 @@ class Checkout extends Model
         'timer_id',
         'is_deleted',
         'deleted_at',
-        'checkout_style'
+        'checkout_style',
+        'is_active_contact_and_documents_fields',
+        'is_active_address_fields',
     ];
 
     public function offer(): BelongsTo

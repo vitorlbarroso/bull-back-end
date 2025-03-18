@@ -70,7 +70,7 @@ class CheckoutService
             ])
                 ->where('checkout_hash', $hashIdentifier)
                 ->where('is_deleted', 0)
-                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style')
+                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style', 'is_active_contact_and_documents_fields', 'is_active_address_fields')
                 ->first();
             return $this->formatCheckoutData($checkout);
         } catch (\Exception $e) {
@@ -88,6 +88,8 @@ class CheckoutService
                 'order_bump_title' => $checkout->order_bump_title,
                 'exit_popup' => $checkout->exit_popup,
                 'checkout_style' => $checkout->checkout_style,
+                'is_active_contact_and_documents_fields' => $checkout->is_active_contact_and_documents_fields,
+                'is_active_address_fields' => $checkout->is_active_address_fields,
             ],
             'offer_data' => [
                 'id' => $checkout->offer->id,
@@ -198,6 +200,8 @@ class CheckoutService
             'banner_display' => $validatedData['banner']['display'] ?? true,
             'background_color' => $validatedData['configs']['background_color'],
             'checkout_style' => $validatedData['checkout_style'],
+            'is_active_contact_and_documents_fields' => $validatedData['is_active_contact_and_documents_fields'],
+            'is_active_address_fields' => $validatedData['is_active_address_fields'],
             // Add other fields as necessary
         ];
 
