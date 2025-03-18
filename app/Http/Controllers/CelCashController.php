@@ -375,7 +375,7 @@ class CelCashController extends Controller
         }
 
         try {
-            Mail::to($validatedData['customer_email'])->send(new GeneratePixMail($validatedData['customer_name'], $pixReference, $getPrincipalOffer->product->email_support, ($totalPrice / 100), $generatePayment['orderId']));
+            Mail::to($validatedData['customer_email'])->send(new GeneratePixMail($validatedData['customer_name'], $pixReference, $getPrincipalOffer->product->email_support, ($totalPrice / 100), $unicId));
         }
         catch (\Exception $e) {
             Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao tentar enviar um e-mail de pagamento |', [ 'ERRO' => $e->getMessage()]);
