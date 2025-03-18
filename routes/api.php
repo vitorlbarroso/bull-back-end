@@ -142,4 +142,9 @@ Route::prefix('webhooks')->group(function() {
         Route::post('/documents', [CelcashWebhooksController::class, 'documents']);
         Route::get('/transactions', [CelcashWebhooksController::class, 'transactions']);
     });
+
+    Route::prefix('zendry')->middleware('celcash.webhook')->group(function() {
+        Route::post('/documents', [CelcashWebhooksController::class, 'documents']);
+        Route::get('/transactions', [CelcashWebhooksController::class, 'transactions']);
+    });
 });
