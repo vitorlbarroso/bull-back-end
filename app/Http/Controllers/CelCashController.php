@@ -305,15 +305,17 @@ class CelCashController extends Controller
 
             $generatePayment = CelCashService::generatePaymentPixByZendry($data, $unicId);
 
-            $unicId = $generatePayment['qrcode']['reference_code'];
+            if (isset($generatePayment['qrcode'])) {
+                $unicId = $generatePayment['qrcode']['reference_code'];
 
-            $adquirerName = 'zendry';
+                $adquirerName = 'zendry';
 
-            $returnData = [
-                'galax_pay_id' => $generatePayment['qrcode']['reference_code'],
-                'qr_code' => $generatePayment['qrcode']['content'],
-                'upsell' => $getPrincipalOffer->sale_completed_page_url
-            ];
+                $returnData = [
+                    'galax_pay_id' => $generatePayment['qrcode']['reference_code'],
+                    'qr_code' => $generatePayment['qrcode']['content'],
+                    'upsell' => $getPrincipalOffer->sale_completed_page_url
+                ];
+            }
         }
 
         if (!empty($generatePayment['error'])) {
