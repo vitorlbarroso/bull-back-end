@@ -286,7 +286,19 @@ class CelCashController extends Controller
             'price' => $totalPrice
         ];
 
-        $generatePayment = CelCashService::generatePaymentPix($data);
+        if ($getPrincipalOffer->product->user->cash_in_adquirer_name == 'reflow' || $getPrincipalOffer->product->user->cash_in_adquirer_name == null) {
+            $generatePayment = CelCashService::generatePaymentPix($data);
+
+            $adquirerName = 'reflow';
+        }
+
+        if ($getPrincipalOffer->product->user->cash_in_adquirer_name == 'zendry') {
+            $generatePayment = CelCashService::generatePaymentPixByZendry($data);
+
+            $adquirerName = 'zendry';
+        }
+
+        return $generatePayment;
 
         if (!empty($generatePayment['error'])) {
             $errorMessage = $generatePayment['error']['message'];
@@ -295,7 +307,7 @@ class CelCashController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($getPrincipalOffer, $generatePayment, $totalPrice, $calculateTax, $formatedPayday, $validatedData, $offersData) {
+            DB::transaction(function () use ($getPrincipalOffer, $generatePayment, $totalPrice, $calculateTax, $formatedPayday, $validatedData, $offersData, $adquirerName) {
                 $createCelcashPayments = CelcashPayments::create([
                     'receiver_user_id' => $getPrincipalOffer->product->user->id,
                     'buyer_user_id' => null,
@@ -309,7 +321,8 @@ class CelCashController extends Controller
                     'buyer_name' => $validatedData['customer_name'] ?? null,
                     'buyer_email' => $validatedData['customer_email'] ?? null,
                     'buyer_document_cpf' => $validatedData['customer_document'] ?? null,
-                    'status' => 'pending_pix'
+                    'status' => 'pending_pix',
+                    'adquirer' => $adquirerName,
                 ]);
 
                 $createPixDetails = CelcashPaymentsPixData::create([
