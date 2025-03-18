@@ -140,11 +140,10 @@ Route::prefix('withdraws')->middleware('auth:sanctum')->group(function() {
 Route::prefix('webhooks')->group(function() {
     Route::prefix('reflow')->middleware('celcash.webhook')->group(function() {
         Route::post('/documents', [CelcashWebhooksController::class, 'documents']);
-        Route::get('/transactions', [CelcashWebhooksController::class, 'transactions']);
+        Route::post('/transactions', [CelcashWebhooksController::class, 'transactions']);
     });
 
-    Route::prefix('zendry')->middleware('celcash.webhook')->group(function() {
-        Route::post('/documents', [CelcashWebhooksController::class, 'documents']);
-        Route::get('/transactions', [CelcashWebhooksController::class, 'transactions']);
+    Route::prefix('zendry')->group(function() {
+        Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_zendry']);
     });
 });

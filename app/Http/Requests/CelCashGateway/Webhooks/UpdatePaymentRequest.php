@@ -22,8 +22,8 @@ class UpdatePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'orderId' => 'required',
-            'status' => 'required',
+            'message' => 'required',
+            'message' => 'required',
         ];
     }
 }

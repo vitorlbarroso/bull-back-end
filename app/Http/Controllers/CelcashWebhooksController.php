@@ -11,6 +11,7 @@ use App\Models\CelcashPayments;
 use App\Models\User;
 use App\Models\UserCelcashCnpjCredentials;
 use App\Models\UserCelcashCpfCredentials;
+use App\Models\ZendryTokens;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -159,6 +160,101 @@ class CelcashWebhooksController extends Controller
                         'webhook_title' => 'ERRO AO CRIAR USUÁRIO PAGANTE',
                         'webhook_id' => $validatedData['webhookId'],
                         'webhook_event' => $validatedData['event'],
+                        'webhook_data' => $request,
+                    ]);
+                }
+            }
+
+            $getTransaction->update([
+                'status' => $status,
+                'buyer_user_id' => $buyerUser->id
+            ]);
+
+            /*
+             * ========================================================
+             * ADICIONAR ENVIO DE E-MAIL DE COMPRA PARA O USUÁRIO
+             * ========================================================
+             * */
+
+            /*
+             * =============================================================
+             * DISPARA O EVENTO PARA RELACIONAR A COMPRA DA OFERTA AO USUARIO
+             * E INICIA AS AULAS COM O PROGRESSO ZERADO
+             * =============================================================
+             */
+            event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
+        } else {
+            $getTransaction->update([
+                'status' => $status
+            ]);
+        }
+
+        return Responses::SUCCESS('Status do transação atualizado com sucesso!', null, 200);
+    }
+
+    public function transactions_zendry(Request $request)
+    {
+        $validatedData = $request->validate([
+            'message' => 'required',
+            'message.reference_code' => 'required',
+            'message.status' => 'required',
+            'message.end_to_end' => 'required',
+            'message.value_cents' => 'required',
+            'md5' => 'required',
+        ]);
+
+        $getSecretToken = ZendryTokens::where('type', 'private_token')->first();
+
+        $generateMd5String = "qrcode." . $validatedData['message']['reference_code'] . $validatedData['message']['end_to_end'] . $validatedData['message']['value_cents'] . trim($getSecretToken->value);
+        $generateMd5 = md5($generateMd5String);
+
+        if ($generateMd5 != $validatedData['md5']) {
+            return Responses::ERROR('Ação não autorizada. Credenciais inválidas!', null, 1200, 400);
+        }
+
+        $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['message']['reference_code'])
+            ->first();
+
+        if (!$getTransaction) {
+            return Responses::ERROR('Transação não localizada!', null, 1300, 400);
+        }
+
+        $isPayedStatus = false;
+
+        if ($getTransaction->type == 'pix') {
+            if (
+                $validatedData['message']['status'] == 'paid'
+            ) {
+                $status = 'payed_pix';
+                $isPayedStatus = true;
+            }
+
+            if (
+                $validatedData['message']['status'] == 'awaiting_payment'
+            ) {
+                $status = 'pending_pix';
+                $isPayedStatus = true;
+            }
+        }
+
+        if ($isPayedStatus) {
+            $buyerUser = User::where('email', $getTransaction->buyer_email)->first();
+
+            if (!$buyerUser) {
+                $generateRandomPassword = UserService::generateRandomPassword();
+
+                try {
+                    $buyerUser = User::create([
+                        'name' => $getTransaction->buyer_name,
+                        'email' => $getTransaction->buyer_email,
+                        'password' => $generateRandomPassword
+                    ]);
+                }
+                catch (\Exception $e) {
+                    \App\Models\CelcashWebhook::create([
+                        'webhook_title' => 'ERRO AO CRIAR USUÁRIO PAGANTE',
+                        'webhook_id' => $validatedData['message']['reference_code'],
+                        'webhook_event' => $validatedData['message'],
                         'webhook_data' => $request,
                     ]);
                 }
