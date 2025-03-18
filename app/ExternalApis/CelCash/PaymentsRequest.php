@@ -7,6 +7,7 @@ use App\Services\CelCashService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PaymentsRequest
 {
@@ -76,37 +77,31 @@ class PaymentsRequest
         }
     }
 
-    static public function generatePaymentPixZendry($data)
+    static public function generatePaymentPixZendry($data, $unicId)
     {
 
-        return $zendryAuthToken = PaymentsRequest::getZendryToken();
+        $zendryAuthToken = PaymentsRequest::getZendryToken();
+
+        if (isset($zendryAuthToken['error'])) {
+            return [
+                'error' => [
+                    'message' => "Erro ao gerar pedido PIX na adquirente. Consultar tokens!",
+                    'errorMessage' => $zendryAuthToken,
+                    'errorCode' => 1100
+                ]
+            ];
+        }
 
         $headers = [
-            'x-authorization-key' => $data['token']['token'],
+            'Authorization' => 'Bearer ' . $zendryAuthToken,
             'Content-Type' => 'application/json'
         ];
 
         $body = [
-                'isInfoProducts' => true,
-            'paymentMethod' => 'pix',
-            'customer' => [
-                'name' => $data['customer']['name'],
-                'email' => $data['customer']['email'],
-                'document' => [
-                    'number' => $data['customer']['document']['number'],
-                    'type' => $data['customer']['document']['type'],
-                ],
-            ],
-            'items' => [
-                [
-                    'title' => 'Compra*BullsPay',
-                    'description' => 'Compra*BullsPay',
-                    'unitPrice' => $data['price'],
-                    'quantity' => 1,
-                    'tangible' => false,
-                ]
-            ],
-            'postbackUrl' => env('WEBHOOKS_BASE_URL')
+            'value_cents' => $data['price'],
+            'external_reference' => $unicId,
+            'generator_name' => $data['customer']['name'],
+            'generator_document' => $data['customer']['document']['number'],
         ];
 
         $baseUrl = env('ZENDRY_BASE_URL');
@@ -114,7 +109,7 @@ class PaymentsRequest
         try {
             $createPayment = Http::WithHeaders($headers)
                 ->post(
-                    $baseUrl . '/transactions',
+                    $baseUrl . '/v1/pix/qrcodes',
                     $body
                 );
 
@@ -125,7 +120,7 @@ class PaymentsRequest
                     'error' => [
                         'message' => "Erro ao gerar pagamento pix na adquirente",
                         'errorMessage' => $response,
-                        'errorCode' => 1100
+                        'errorCode' => 1300
                     ]
                 ];
             }
@@ -133,11 +128,11 @@ class PaymentsRequest
             return $response;
         }
         catch (\Exception $e) {
-            Log::error('Erro ao tentar gerar pagamento pix na voluti: ' . $e->getMessage());
+            Log::error('Erro ao tentar gerar pagamento pix na adquirente: ' . $e->getMessage());
 
             return [
                 'error' => [
-                    'message' => "Erro ao gerar pagamento pix na voluti",
+                    'message' => "Erro ao gerar pagamento pix na adquirente",
                     'errorMessage' => $e->getMessage(),
                     'errorCode' => -1100
                 ]
@@ -196,11 +191,11 @@ class PaymentsRequest
                         'type' => 'token',
                         'value' => $response['access_token'],
                     ]);
+                } else {
+                    $hasToken->update([
+                        'value' => $response['access_token'],
+                    ]);
                 }
-
-                $hasToken->update([
-                    'value' => $response['access_token'],
-                ]);
 
                 return $response['access_token'];
             }

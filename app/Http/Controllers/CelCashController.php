@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use PhpParser\Node\Stmt\Return_;
 
 class CelCashController extends Controller
@@ -288,17 +289,30 @@ class CelCashController extends Controller
 
         if ($getPrincipalOffer->product->user->cash_in_adquirer_name == 'reflow' || $getPrincipalOffer->product->user->cash_in_adquirer_name == null) {
             $generatePayment = CelCashService::generatePaymentPix($data);
+            $unicId = $generatePayment['orderId'];
 
             $adquirerName = 'reflow';
+
+            $returnData = [
+                'galax_pay_id' => $generatePayment['orderId'],
+                'qr_code' => $generatePayment['pix']['payload'],
+                'upsell' => $getPrincipalOffer->sale_completed_page_url
+            ];
         }
 
         if ($getPrincipalOffer->product->user->cash_in_adquirer_name == 'zendry') {
-            $generatePayment = CelCashService::generatePaymentPixByZendry($data);
+            $unicId = "BP_ID_" . Str::upper(Str::random(30));
+
+            $generatePayment = CelCashService::generatePaymentPixByZendry($data, $unicId);
 
             $adquirerName = 'zendry';
-        }
 
-        return $generatePayment;
+            $returnData = [
+                'galax_pay_id' => $generatePayment['qrcode']['external_reference'],
+                'qr_code' => $generatePayment['qrcode']['image_base64'],
+                'upsell' => $getPrincipalOffer->sale_completed_page_url
+            ];
+        }
 
         if (!empty($generatePayment['error'])) {
             $errorMessage = $generatePayment['error']['message'];
@@ -307,11 +321,11 @@ class CelCashController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($getPrincipalOffer, $generatePayment, $totalPrice, $calculateTax, $formatedPayday, $validatedData, $offersData, $adquirerName) {
+            DB::transaction(function () use ($getPrincipalOffer, $generatePayment, $totalPrice, $calculateTax, $formatedPayday, $validatedData, $offersData, $adquirerName, $unicId) {
                 $createCelcashPayments = CelcashPayments::create([
                     'receiver_user_id' => $getPrincipalOffer->product->user->id,
                     'buyer_user_id' => null,
-                    'galax_pay_id' => $generatePayment['orderId'],
+                    'galax_pay_id' => $unicId,
                     'type' => 'pix',
                     'installments' => 1,
                     'total_value' => $totalPrice,
@@ -325,11 +339,21 @@ class CelCashController extends Controller
                     'adquirer' => $adquirerName,
                 ]);
 
-                $createPixDetails = CelcashPaymentsPixData::create([
-                    'celcash_payments_id' => $createCelcashPayments->id,
-                    'qr_code' => $generatePayment['pix']['encodedImage'],
-                    'reference' => $generatePayment['pix']['payload'],
-                ]);
+                if ($adquirerName == 'reflow') {
+                    $createPixDetails = CelcashPaymentsPixData::create([
+                        'celcash_payments_id' => $createCelcashPayments->id,
+                        'qr_code' => $generatePayment['pix']['encodedImage'],
+                        'reference' => $generatePayment['pix']['payload'],
+                    ]);
+                }
+
+                if ($adquirerName == 'zendry') {
+                    $createPixDetails = CelcashPaymentsPixData::create([
+                        'celcash_payments_id' => $createCelcashPayments->id,
+                        'qr_code' => $generatePayment['qrcode']['image_base64'],
+                        'reference' => $generatePayment['qrcode']['content'],
+                    ]);
+                }
 
                 foreach ($offersData as $offer) {
                     CelcashPaymentsOffers::create([
@@ -343,12 +367,6 @@ class CelCashController extends Controller
         catch (\Exception $e) {
             return Responses::ERROR('Ocorreu um erro ao salvar o pedido!', $e->getMessage(), 1500, 400);
         }
-
-        $returnData = [
-            'galax_pay_id' => $generatePayment['orderId'],
-            'qr_code' => $generatePayment['pix']['payload'],
-            'upsell' => $getPrincipalOffer->sale_completed_page_url
-        ];
 
         try {
             Mail::to($validatedData['customer_email'])->send(new GeneratePixMail($validatedData['customer_name'], $generatePayment['pix']['payload'], $getPrincipalOffer->product->email_support, ($totalPrice / 100), $generatePayment['orderId']));

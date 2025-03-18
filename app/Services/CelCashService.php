@@ -252,7 +252,7 @@ class CelCashService
 
         return $generatePayment;
     }
-    static public function generatePaymentPixByZendry($data)
+    static public function generatePaymentPixByZendry($data, $unicId)
     {
         $validator = Validator::make($data, [
             'customer' => 'required|array',
@@ -286,7 +286,7 @@ class CelCashService
 
         $validated['token'] = $getToken;
 
-        $generatePayment = PaymentsRequest::generatePaymentPixZendry($validated);
+        $generatePayment = PaymentsRequest::generatePaymentPixZendry($validated, $unicId);
 
         return $generatePayment;
     }
