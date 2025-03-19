@@ -341,6 +341,11 @@ class CelCashController extends Controller
                     'buyer_name' => $validatedData['customer_name'] ?? null,
                     'buyer_email' => $validatedData['customer_email'] ?? null,
                     'buyer_document_cpf' => $validatedData['customer_document'] ?? null,
+                    'buyer_zipcode' => $validatedData['customer_zipcode'] ?? null,
+                    'buyer_state' => $validatedData['customer_state'] ?? null,
+                    'buyer_city' => $validatedData['customer_city'] ?? null,
+                    'buyer_number' => $validatedData['customer_number'] ?? null,
+                    'buyer_complement' => $validatedData['customer_complement'] ?? null,
                     'status' => 'pending_pix',
                     'adquirer' => $adquirerName,
                 ]);

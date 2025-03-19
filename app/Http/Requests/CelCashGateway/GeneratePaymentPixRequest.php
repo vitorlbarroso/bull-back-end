@@ -29,6 +29,11 @@ class GeneratePaymentPixRequest extends FormRequest
             'customer_document' => 'nullable|string',
             'customer_email' => 'string',
             'customer_phone' => 'nullable|string',
+            'customer_zipcode' => 'nullable|string',
+            'customer_state' => 'nullable|string',
+            'customer_city' => 'nullable|string',
+            'customer_number' => 'nullable|string',
+            'customer_complement' => 'nullable|string',
         ];
     }
 }
