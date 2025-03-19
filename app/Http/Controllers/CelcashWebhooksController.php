@@ -203,14 +203,14 @@ class CelcashWebhooksController extends Controller
             'md5' => 'required',
         ]);
 
-        $getSecretToken = ZendryTokens::where('type', 'private_token')->first();
+        /*$getSecretToken = ZendryTokens::where('type', 'private_token')->first();
 
-        $generateMd5String = "qrcode." . $validatedData['message']['reference_code'] . $validatedData['message']['end_to_end'] . $validatedData['message']['value_cents'] . trim($getSecretToken->value);
+        $generateMd5String = "qrcode." . $validatedData['message']['reference_code'] . '.' . $validatedData['message']['end_to_end'] . '.' . $validatedData['message']['value_cents'] . '.' . trim($getSecretToken->value);
         $generateMd5 = md5($generateMd5String);
 
         if ($generateMd5 != $validatedData['md5']) {
             return Responses::ERROR('Ação não autorizada. Credenciais inválidas!', null, 1200, 400);
-        }
+        }*/
 
         $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['message']['reference_code'])
             ->first();
