@@ -100,8 +100,6 @@ class PaymentsRequest
         $body = [
             'value_cents' => $data['price'],
             'external_reference' => $unicId,
-            'generator_name' => $data['customer']['name'],
-            'generator_document' => $data['customer']['document']['number'],
         ];
 
         $baseUrl = env('ZENDRY_BASE_URL');

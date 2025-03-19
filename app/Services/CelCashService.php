@@ -220,9 +220,9 @@ class CelCashService
             'customer' => 'required|array',
             'customer.name' => 'required|string',
             'customer.email' => 'required|string',
-            'customer.document' => 'array',
-            'customer.document.number' => 'string',
-            'customer.document.type' => 'string',
+            'customer.document' => 'nullable|array',
+            'customer.document.number' => 'nullable|string',
+            'customer.document.type' => 'nullable|string',
             'price' => 'required|numeric'
         ]);
 

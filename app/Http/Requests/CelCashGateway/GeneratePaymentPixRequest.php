@@ -26,9 +26,9 @@ class GeneratePaymentPixRequest extends FormRequest
             'orderbumps' => 'array',
             'orderbumps.*.id' => 'required|integer',
             'customer_name' => 'string',
-            'customer_document' => 'string',
+            'customer_document' => 'nullable|string',
             'customer_email' => 'string',
-            'customer_phone' => 'string',
+            'customer_phone' => 'nullable|string',
         ];
     }
 }
