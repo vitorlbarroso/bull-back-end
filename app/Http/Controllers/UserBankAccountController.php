@@ -31,6 +31,11 @@ class UserBankAccountController extends Controller
         }
 
         try {
+            $getAllAccounts = UserBankAccount::where('user_id', $user->id);
+            if ($getAllAccounts->exists()) {
+                $getAllAccounts->update(['is_active' => false]);
+            }
+
             $createAccountBank = UserBankAccount::create([
                 'user_id' => $user->id,
                 'banks_codes_id' => $validated['banks_codes_id'],
@@ -41,7 +46,9 @@ class UserBankAccountController extends Controller
                 'account_agency' => $validated['account_agency'],
                 'account_check_digit' => $validated['account_check_digit'],
                 'pix_type_key' => $validated['pix_type_key'],
-                'pix_key' => $validated['pix_key']
+                'pix_key' => $validated['pix_key'],
+                'status' => 'approved',
+                'is_active' => true,
             ]);
 
             return Responses::SUCCESS('Conta bancária em análise!');

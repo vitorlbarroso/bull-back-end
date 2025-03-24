@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CelcashPayments;
+use App\Models\User;
 use App\Models\WithdrawalRequests;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -363,7 +364,8 @@ class UserPaymentsDataService
             'total_pending' => 0,
             'total_available' => 0,
             'total_chargeback' => 0,
-            'total_chargeback_count' => 0
+            'total_chargeback_count' => 0,
+            'withdrawal_tax' => 0
         ];
 
         try {
@@ -401,6 +403,7 @@ class UserPaymentsDataService
             $returnData['total_available'] = $availablePayments;
             $returnData['total_chargeback'] = $totalChargebacks;
             $returnData['total_chargeback_count'] = $totalChargebacksCount;
+            $returnData['withdrawal_tax'] = $user->withdrawal_tax;
         } catch (\Exception $e) {
             \Log::error('Erro ao calcular dados de saque: ' . $e->getMessage());
         }
