@@ -44,8 +44,8 @@ class WithdrawalRequestsController extends Controller
     {
         $validated = $request->validated();
 
-        if ($validated['amount'] < 10000) {
-            return Responses::ERROR('Valor não permitido, saque mínimo de 100 reais!', null, 1100, 400);
+        if ($validated['amount'] < 1000) {
+            return Responses::ERROR('Valor não permitido, saque mínimo de 10 reais!', null, 1100, 400);
         }
 
         $user = Auth::user();
