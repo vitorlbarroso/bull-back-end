@@ -56,7 +56,7 @@ class PixelEventService
         }
     }
 
-    public function storePixel($data)
+    public static function storePixel($data)
     {
        return  OfferPixel::create([
             'pixels_id' => $data->pixels_id,
@@ -66,7 +66,7 @@ class PixelEventService
         ]);
     }
 
-   public function FormatDataPixel(array $data): array
+   public static function FormatDataPixel(array $data): array
     {
         // Mapeia as transformações necessárias para cada campo
         $transformations = [
@@ -97,7 +97,7 @@ class PixelEventService
     }
 
 // Função genérica que aplica a transformação especificada
-   public function applyTransformation(string $value, string $transformation): string
+   public static function applyTransformation(string $value, string $transformation): string
     {
         switch ($transformation) {
             case 'hash256':
