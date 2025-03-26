@@ -12,7 +12,7 @@ class PixelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pixels_id' => 'integer',
+            'pixel_id' => 'integer',
             'product_offering_id' => 'integer',
             'access_token' => 'nullable|string',
         ];

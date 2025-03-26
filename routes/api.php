@@ -19,6 +19,7 @@ use App\Http\Controllers\ModulesController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\CelcashWebhooksController;
 use App\Http\Controllers\BanksCodeController;
+use \App\Http\Controllers\PixelsController;
 
 Route::prefix('user')->group(function() {
     Route::get('/forgotPassword/validateToken', [AuthController::class, 'verify_token']);
@@ -146,4 +147,12 @@ Route::prefix('webhooks')->group(function() {
     Route::prefix('zendry')->group(function() {
         Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_zendry']);
     });
+});
+
+Route::prefix('pixel')->middleware('auth:sanctum')->group(function() {
+    Route::post('/', [PixelsController::class, 'store']);
+    Route::get('/{offer_id}', [PixelsController::class, 'show']);
+});
+Route::prefix('pixel')->group(function() {
+    Route::post('/event', [PixelsController::class, 'send']);
 });

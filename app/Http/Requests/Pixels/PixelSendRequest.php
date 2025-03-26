@@ -12,19 +12,20 @@ class PixelSendRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'offer_id' => 'required|integer',
             'event_name' => 'required|string|max:255',
             'event_source_url' => 'required|url',
             'event_time' => 'required|integer',
             'action_source' => 'required|string|in:website,app,other', // Ajuste conforme o contexto
             'user_data' => 'required|array',
-            'user_data.em' => 'required|array',
+            'user_data.em' => 'required|array', //email
             'user_data.em.*' => 'required|string', // Hash de 64 caracteres
             'user_data.ph' => 'required|array',
             'user_data.ph.*' => 'required|string', // formato 5511985236631
             'user_data.ct' => 'required|array',
-            'user_data.ct.*' => 'required|string',
-            'user_data.client_ip_address' => 'required|ip',
-            'user_data.client_user_agent' => 'required|string|max:255',
+            'user_data.ct.*' => 'required|string', //cidade sem espacos e acentos
+            'user_data.client_ip_address' => 'nullable|string',
+            'user_data.client_user_agent' => 'nullable|string|max:255',
             'user_data.fbc' => 'nullable|string', // identificação do clique no Facebook está armazenado no cookie
             'user_data.fbp' => 'nullable|string', // identificação do navegador no Facebook está armazenado no cookie
             'user_data.fn' => 'nullable|array',

@@ -10,6 +10,14 @@ class OfferPixel extends Model
 {
     use SoftDeletes;
 
+    protected $fillable = [
+        'pixels_id',
+        'pixel',
+        'access_token',
+        'product_offering_id',
+        'status',
+    ];
+
     protected $casts = [
         'status' => 'boolean',
     ];
@@ -17,5 +25,9 @@ class OfferPixel extends Model
     public function pixels(): BelongsTo
     {
         return $this->belongsTo(pixels::class);
+    }
+    public function productOffering()
+    {
+        return $this->belongsTo(ProductOffering::class, 'product_offering_id');
     }
 }

@@ -17,6 +17,7 @@ class FacebookPixelJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected PixelEvent $event;
+    protected OfferPixel $offerPixel;
     public $tries = 3; // Tentativas de reprocessamento
     public $backoff = 60; // Tempo de espera entre tentativas (60 segundos)
 
@@ -35,7 +36,6 @@ class FacebookPixelJob implements ShouldQueue
             if ($this->offerPixel && !empty($this->offerPixel->access_token)) {
                 // Chamar o serviço para enviar o pixel para o Facebook
                 $service->sendToFacebookPixel($this->event, $this->offerPixel);
-
                 Log::info('Pixel enviado para o Facebook com sucesso.', [
                     'offer_id' => $this->event->offer_id,
                 ]);
@@ -44,10 +44,11 @@ class FacebookPixelJob implements ShouldQueue
             }
         } catch (\Exception $e) {
             // Logar o erro para análise futura
-            Log::error('Erro ao processar o envio do Facebook Pixel.', [
+            Log::error($this->event->TID.'|Erro ao processar o envio do Facebook Pixel.', [
                 'offer_id' => $this->event->offer_id,
                 'error' => $e->getMessage(),
             ]);
+            throw $e;
         }
     }
 }

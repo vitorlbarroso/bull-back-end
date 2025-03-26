@@ -72,4 +72,9 @@ class ProductOffering extends Model
     {
         return (boolean) $value;
     }
+
+    public function offerPixels()
+    {
+        return $this->hasMany(OfferPixel::class, 'product_offering_id');
+    }
 }

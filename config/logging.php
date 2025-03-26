@@ -52,6 +52,13 @@ return [
     */
 
     'channels' => [
+        'horizon' => [
+            'driver' => 'daily', // Pode ser 'single' ou 'daily'
+            'path' => storage_path('logs/horizon.log'),
+            'level' => 'debug', // Define o nível de log
+            'days' => 14, // Mantém logs por 14 dias
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => ['single'],
