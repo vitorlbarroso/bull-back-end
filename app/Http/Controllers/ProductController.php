@@ -143,12 +143,12 @@ class ProductController extends Controller
         }
 
         $formattedOffer = $offers->toArray();
-        $formattedOffer['integration_faceboook_pixel'] = [];
+        $formattedOffer['integration_facebook_pixel'] = [];
 
         if ($offers->offerPixels->isNotEmpty()) {
             foreach ($offers->offerPixels as $offerPixel) {
                 if ($offerPixel->pixels_id == 1) {
-                    $formattedOffer['integration_faceboook_pixel'][] = [
+                    $formattedOffer['integration_facebook_pixel'][] = [
                         'id' => $offerPixel->id,
                         'pixel_id' => $offerPixel->pixel,
                         'access_token' => $offerPixel->access_token,
