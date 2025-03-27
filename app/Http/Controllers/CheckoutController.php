@@ -68,7 +68,7 @@ class CheckoutController extends Controller
     public function verify_pay($payment_id)
     {
         $getPayment = CelcashPayments::where('galax_pay_id', $payment_id)
-            ->where('status', g'payed_pix')
+            ->where('status', 'payed_pix')
             ->exists();
 
         $returnData = $getPayment ? true : false;
