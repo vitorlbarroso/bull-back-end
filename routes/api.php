@@ -60,6 +60,7 @@ Route::prefix('media')->middleware('auth:sanctum')->group(function() {
 
 Route::prefix('checkouts')->group(function() {
     Route::get('/pay/{checkout_hash}', [CheckoutController::class, 'get_public_checkout']);
+    Route::get('/verify_pay/{payment_id}', [CheckoutController::class, 'verify_pay']);
 
     Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/{hashIdentifier}', [CheckoutController::class, 'show']);

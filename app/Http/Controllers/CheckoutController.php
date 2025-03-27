@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Helpers\Responses;
 use App\Http\Requests\Checkout\CheckoutRequest;
 use App\Http\Requests\Checkout\UpdatecheckoutRequest;
+use App\Models\CelcashPayments;
 use App\Models\Checkout;
 use App\Models\ProductOffering;
 use App\Services\CheckoutService;
@@ -62,6 +63,17 @@ class CheckoutController extends Controller
 
             return Responses::ERROR("Ocorreu um erro ao buscar o checkout. Erro genérico não mapeado!", null, -9999, 500);
         }
+    }
+
+    public function verify_pay($payment_id)
+    {
+        $getPayment = CelcashPayments::where('galax_pay_id', $payment_id)
+            ->where('payed_pix')
+            ->exists();
+
+        $returnData = $getPayment ? true : false;
+
+        return Responses::SUCCESS('', $returnData);
     }
 
     public function update(UpdatecheckoutRequest $request, $id)
