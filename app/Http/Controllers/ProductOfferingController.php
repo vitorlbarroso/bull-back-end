@@ -58,12 +58,19 @@ class ProductOfferingController extends Controller
                 ->with(['product', 'checkouts' => function($query) {
                     $query->where('is_active', 1)
                         ->orderBy('id', 'desc');
-                }])
+                }
+                ])
+                 ->with(['offerPixels' => function($query) {
+                     $query->where('status', 1);
+                 }])
                 ->orderBy('id', 'desc')
                 ->paginate($itemsPerPage);
          }, 600); // Cache por 10 minutos (600 segundos)
+        $formattedOffers = $getAllProductOfferings->through(function ($offer) {
+            return $this->formatOffersWithPixels($offer);
+        });
 
-        return Responses::SUCCESS('', $getAllProductOfferings);
+        return Responses::SUCCESS('', $formattedOffers);
     }
 
     public function store(CreateProductOfferingRequest $request)
@@ -147,16 +154,47 @@ class ProductOfferingController extends Controller
                         $query->where('is_active', 1)
                             ->orderBy('id', 'desc');
                     }])
+                        ->with(['offerPixels' => function($query) {
+                            $query->where('status', 1);
+                        }])
                     ->where('is_deleted', 0)
                     ->first();
         }, 600); // Cache por 10 minutos (600 segundos)
         if (!$getOffer) {
             return Responses::ERROR('Oferta não localizada', null, -1100, 404);
         }
+        $formattedOffers = $getOffer->through(function ($offer) {
+            return $this->formatOffersWithPixels($offer);
+        });
 
-        return Responses::SUCCESS('Oferta encontrada com sucesso', $getOffer);
+        return Responses::SUCCESS('Oferta encontrada com sucesso', $formattedOffers);
     }
 
+    protected function formatOffersWithPixels($offers)
+    {
+        if (!$offers) {
+            return null;
+        }
+
+        $formattedOffer = $offers->toArray();
+        $formattedOffer['integration_faceboook_pixel'] = [];
+
+        if ($offers->offerPixels->isNotEmpty()) {
+            foreach ($offers->offerPixels as $offerPixel) {
+                if ($offerPixel->pixels_id == 1) {
+                    $formattedOffer['integration_faceboook_pixel'][] = [
+                        'pixel_id' => $offerPixel->pixel,
+                        'access_token' => $offerPixel->access_token,
+                        'send_initiate_checkout' => (bool) $offerPixel->send_on_ic,
+                        'send_purchase_on_generate_payment' => (bool) $offerPixel->send_on_generate_payment,
+                    ];
+                }
+            }
+        }
+        unset($formattedOffer['offer_pixels']);
+        return $formattedOffer;
+
+    }
     public function update(UpdateProductOfferingRequest $request, $id)
     {
         $validated = $request->validated();

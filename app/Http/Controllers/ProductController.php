@@ -116,10 +116,17 @@ class ProductController extends Controller
                         ->orderBy('id', 'desc')
                         ->select('id', 'checkout_hash as active_checkout', 'product_offering_id');
                 }])
+                    ->with(['offerPixels' => function($query) {
+                        $query->where('status', 1);
+                    }])
                 ->orderByDesc('id')
                 ->paginate($itemsPerPage);
         }, 600); // Cache por 10 minutos (600 segundos)
-            return Responses::SUCCESS('', $offers);
+
+            $formattedOffers = $offers->through(function ($offer) {
+                return $this->formatOffersWithPixels($offer);
+            });
+            return Responses::SUCCESS('', $formattedOffers);
         }
         catch (\Throwable $th) {
             Log::error('Não foi possível listar as ofertas desse produto', ['error' => $th->getMessage()]);
@@ -128,6 +135,33 @@ class ProductController extends Controller
         }
 
     }
+
+    protected function formatOffersWithPixels($offers)
+    {
+        if (!$offers) {
+            return null;
+        }
+
+        $formattedOffer = $offers->toArray();
+        $formattedOffer['integration_faceboook_pixel'] = [];
+
+        if ($offers->offerPixels->isNotEmpty()) {
+            foreach ($offers->offerPixels as $offerPixel) {
+                if ($offerPixel->pixels_id == 1) {
+                    $formattedOffer['integration_faceboook_pixel'][] = [
+                        'pixel_id' => $offerPixel->pixel,
+                        'access_token' => $offerPixel->access_token,
+                        'send_initiate_checkout' => (bool) $offerPixel->send_on_ic,
+                        'send_purchase_on_generate_payment' => (bool) $offerPixel->send_on_generate_payment,
+                    ];
+                }
+            }
+        }
+        unset($formattedOffer['offer_pixels']);
+        return $formattedOffer;
+
+    }
+
 
     public function update(UpdateProductRequest $request){
 
