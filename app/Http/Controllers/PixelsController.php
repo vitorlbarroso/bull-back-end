@@ -23,10 +23,10 @@ class PixelsController extends Controller
     {
         try {
             $data= PixelEventService::storePixel($request);
-            return Responses::SUCCESS(' Pixel inserido com sucesso',$data,201);
+            return Responses::SUCCESS(' Pixel criado com sucesso',$data,201);
         } catch (\Exception $e) {
-            Log::error($request->header('x-transaction-id').'| Não foi possível salvar o pixel|'.$e->getMessage());
-            return Responses::ERROR('Não foi possível salvar o pixel', null,-1000);
+            Log::error($request->header('x-transaction-id').'| Não foi possível criar o pixel|'.$e->getMessage());
+            return Responses::ERROR('Não foi possível criar o pixel', null,-1000);
         }
     }
 

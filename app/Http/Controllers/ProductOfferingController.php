@@ -6,24 +6,29 @@ use App\Http\Helpers\Responses;
 use App\Http\Requests\Checkout\CheckoutRequest;
 use App\Http\Requests\Offering\CreateProductOfferingRequest;
 use App\Http\Requests\Offering\UpdateProductOfferingRequest;
+use App\Http\Requests\Pixels\PixelRequest;
 use App\Models\Checkout;
 use App\Models\Product;
 use App\Models\ProductOffering;
 use App\Services\CheckoutService;
+use App\Services\PixelEventService;
 use App\Traits\Cachable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ProductOfferingController extends Controller
 {
     use Cachable;
     protected CheckoutService $checkoutService;
+    protected PixelEventService $pixelservice;
 
-    public function __construct(CheckoutService $checkoutService)
+    public function __construct(CheckoutService $checkoutService, PixelEventService $pixel)
     {
         $this->checkoutService = $checkoutService;
+        $this->pixelservice = $pixel;
     }
 
     public function offer_checkouts($offer_id)
@@ -76,7 +81,6 @@ class ProductOfferingController extends Controller
         }
 
         $createOffer = null;
-
         try {
             DB::transaction(function () use ($user, $request, &$createOffer) {
                 $createOffer = ProductOffering::create([
@@ -97,20 +101,35 @@ class ProductOfferingController extends Controller
                 $id_oferta['product_offering_id' ] = $createOffer->id;
                 $checkoutRequest = new CheckoutRequest($id_oferta);
                 $createCheckout = $this->checkoutService->createCheckout($checkoutRequest);
+
+                $integrationFacebookData = $request->input('integration_faceboook', []);
+
+                if (is_array($integrationFacebookData)) {
+                    foreach ($integrationFacebookData as $pixelData) {
+                        $pixel = [
+                            'pixel_id' => $pixelData['pixel_id'],
+                            'product_offering_id' => $id_oferta,
+                            'access_token' => $pixelData['access_token'] ?? null,
+                            'send_on_ic' => $pixelData['send_initiate_checkout'] ?? true, // Define um valor padrão caso não esteja presente
+                            'send_on_generate_payment' => $pixelData['send_purchase_on_generate_payment'] ?? false, // Define um valor padrão caso não esteja presente
+                        ];
+                        $this->pixelservice::storePixel((object)$pixel); // Cast para objeto para manter a assinatura da função
+                    }
+                }
             });
 
             $activeCheckout = $createOffer->checkouts()->where('is_active', true)->latest()->value('checkout_hash');
 
             $responseData = [
                 'offer' => $createOffer,
-                'active_checkout' => $activeCheckout
+                'active_checkout' => $activeCheckout,
+                'integration_facebook' =>$request->input('integration_faceboook')
             ];
             $this->removeCache($request->header('x-transaction-id'), 'user_' . Auth::id(). '_getOffers_');
             $this->removeCache($request->header('x-transaction-id'), 'user_' . Auth::id(). '_getOffersByProduct_' .$request->product_id);
             return Responses::SUCCESS("Oferta criada com sucesso", $responseData, 201);
-        } catch (\Throwable $th) {
+        }catch (\Throwable $th) {
             Log::error('Não foi possível criar a oferta', ['error' => $th->getMessage()]);
-
             return Responses::ERROR('Não foi possível criar a oferta. Erro genérico não mapeado', null, '-9999', 400);
         }
     }

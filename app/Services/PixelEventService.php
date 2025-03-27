@@ -3,10 +3,14 @@
 namespace App\Services;
 
 use App\Events\PixelEvent;
+use App\Http\Helpers\Responses;
 use App\Models\OfferPixel;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+
 class PixelEventService
 {
     /**
@@ -42,13 +46,12 @@ class PixelEventService
         $ACCESS_TOKEN = $offer_pixel->access_token;
         $PIXEL = $offer_pixel->pixel;
         Log::debug($event->TID."| Realizando POST no facebook|",["url"=>'https://graph.facebook.com/'.$API_VERSION.'/'.$PIXEL.'/events?access_token='.$ACCESS_TOKEN]);
-        Log::debug($event->TID."| Dados da requisicao|",["Dados do corpo"=>$eventData ]);
+        Log::debug($event->TID."| Realizando envio do Pixel via ServiceFacebook|",["Data"=>$eventData ]);
 
         $response = Http::post('https://graph.facebook.com/'.$API_VERSION.'/'.$PIXEL.'/events?access_token='.$ACCESS_TOKEN, $eventData);
         if ($response->failed()) {
             throw new \Exception('Facebook Pixel event failed: ' . $response->body());
         }
-        Log::info($event->TID."| Realizando envio do Pixel via ServiceFacebook|",["data"=> $event->eventData]);
         Log::info($event->TID."| Resposta do Facebook|",["response"=> $response]);
     }
 
@@ -63,11 +66,30 @@ class PixelEventService
         }
     }
 
-    public static function storePixel($data): OfferPixel
+    public static function storePixel($data)
     {
+        // 3. Verificar se a oferta associado ao produto pertence ao usuário logado
+        $productExists = Product::where('user_id', Auth::id())
+            ->whereHas('offers', function ($query) use ($data) {
+                $query->where('id', $data->product_offering_id);
+            })
+            ->exists();
+
+        if (!$productExists) {
+            throw ValidationException::withMessages(['product_offering_id' => 'O product_offering_id informado não existe ou não pertence ao usuario logado.']);
+        }
+
        return  OfferPixel::updateOrCreate(
-           ['pixels_id' =>1, 'pixel'=> $data->pixel_id, 'product_offering_id' => $data->product_offering_id],
-           ['access_token' => $data->access_token ?? null, 'status' => true] // Set status to true
+           [
+               'pixels_id' =>1,
+               'pixel'=> $data->pixel_id,
+               'product_offering_id' => $data->product_offering_id],
+           [
+               'access_token' => $data->access_token ?? null,
+               'status' => true,// Set status to true
+               'send_on_ic' => $data->send_on_ic ?? true,
+               'send_on_generate_payment' => $data->send_on_generate_payment ?? false,
+           ]
         );
     }
 

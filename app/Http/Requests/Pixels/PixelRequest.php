@@ -15,6 +15,8 @@ class PixelRequest extends FormRequest
             'pixel_id' => 'integer',
             'product_offering_id' => 'integer',
             'access_token' => 'nullable|string',
+            'send_initiate_checkout' => 'required|boolean',
+            'send_purchase_on_generate_payment' =>'required|boolean',
         ];
     }
 

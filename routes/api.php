@@ -153,6 +153,7 @@ Route::prefix('pixel')->middleware('auth:sanctum')->group(function() {
     Route::post('/', [PixelsController::class, 'store']);
     Route::get('/{offer_id}', [PixelsController::class, 'show']);
 });
+
 Route::prefix('pixel')->group(function() {
     Route::post('/event', [PixelsController::class, 'send']);
 });

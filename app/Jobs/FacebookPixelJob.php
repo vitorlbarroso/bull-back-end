@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Events\PixelEvent;
+use App\Models\LogsPixelEvent;
 use App\Models\OfferPixel;
 use App\Services\PixelEventService;
 use Illuminate\Bus\Queueable;
@@ -39,6 +40,13 @@ class FacebookPixelJob implements ShouldQueue
                 Log::info('Pixel enviado para o Facebook com sucesso.', [
                     'offer_id' => $this->event->offer_id,
                 ]);
+                LogsPixelEvent::create([
+                    'product_offering_id' => $this->event->offer_id,
+                    'event_name' => $this->event->eventType,
+                    'TID'=> $this->event->TID,
+                    'payload' => $this->event->eventData,
+                    'status' => 'Sucesso'
+                ]);
             } else {
                 Log::warning('Access token não encontrado ou inválido para o offer_id.', ['offer_id' => $this->event->offer_id,]);
             }
@@ -47,6 +55,14 @@ class FacebookPixelJob implements ShouldQueue
             Log::error($this->event->TID.'|Erro ao processar o envio do Facebook Pixel.', [
                 'offer_id' => $this->event->offer_id,
                 'error' => $e->getMessage(),
+            ]);
+            LogsPixelEvent::create([
+                'product_offering_id' => $this->event->offer_id,
+                'event_name' => $this->event->eventType,
+                'TID'=> $this->event->TID,
+                'payload' => $this->event->eventData,
+                'status' => 'Error',
+                'error' => $e,
             ]);
             throw $e;
         }

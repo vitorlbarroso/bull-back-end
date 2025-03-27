@@ -34,7 +34,10 @@ class CreateProductOfferingRequest extends FormRequest
                 if (!$this->enable_card && !$this->enable_pix && !$this->enable_billet) {
                     $fail('Ao menos um método de pagamento deve estar ativo.');
                 }
-            }
+            },
+            'integration_faceboook' => 'nullable|array',
+            'integration_faceboook.*.pixel_id' => 'required|string',
+            'integration_faceboook.*.access_token' => 'nulllable|string',
         ];
     }
 

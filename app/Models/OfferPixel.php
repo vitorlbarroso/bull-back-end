@@ -16,6 +16,8 @@ class OfferPixel extends Model
         'access_token',
         'product_offering_id',
         'status',
+        'send_on_ic',
+        'send_on_generate_payment',
     ];
 
     protected $casts = [

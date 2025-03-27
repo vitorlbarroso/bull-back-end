@@ -12,7 +12,7 @@ class LogRequestResponse
 {
     public function handle($request, Closure $next)
     {
-            // Se a requisição for para o Horizon, não logue nada
+        // Se a requisição for para o Horizon, não logue nada
         if ($request->is('horizon') || $request->is('horizon/*')) {
             return $next($request);
         }

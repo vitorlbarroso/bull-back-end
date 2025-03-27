@@ -200,7 +200,7 @@ return [
             'supervisor-1' => [
                 'connection' => 'redis',
                 'queues' => ['default', 'FacebookPixelEvent'],
-                'balance' => 'auto',
+                'balance' => 'false',
                 'autoScalingStrategy' => 'time',
                 'maxProcesses' => 10,
                 'maxTime' => 0,
@@ -209,6 +209,8 @@ return [
                 'tries' => 2,
                 'timeout' => 60,
                 'nice' => 0,
+                'processes' => 2,
+                'sleep' => 5, // Aguarda 5 segundos entre verificações de job
             ],
         ],
 

@@ -57,6 +57,7 @@ return [
             'path' => storage_path('logs/horizon.log'),
             'level' => 'debug', // Define o nível de log
             'days' => 14, // Mantém logs por 14 dias
+            'replace_placeholders' => true,
         ],
 
         'stack' => [
