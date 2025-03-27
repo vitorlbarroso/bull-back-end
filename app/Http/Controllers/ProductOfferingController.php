@@ -183,6 +183,7 @@ class ProductOfferingController extends Controller
             foreach ($offers->offerPixels as $offerPixel) {
                 if ($offerPixel->pixels_id == 1) {
                     $formattedOffer['integration_faceboook_pixel'][] = [
+                        'id' => $offerPixel->id,
                         'pixel_id' => $offerPixel->pixel,
                         'access_token' => $offerPixel->access_token,
                         'send_initiate_checkout' => (bool) $offerPixel->send_on_ic,
