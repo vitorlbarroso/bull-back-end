@@ -113,14 +113,14 @@ class ProductOfferingController extends Controller
 
                 if (is_array($integrationFacebookData)) {
                     foreach ($integrationFacebookData as $pixelData) {
-                        $pixel = [
+                        $pixel = (object)[
                             'pixel_id' => $pixelData['pixel_id'],
                             'product_offering_id' => $id_oferta,
                             'access_token' => $pixelData['access_token'] ?? null,
                             'send_on_ic' => $pixelData['send_initiate_checkout'] ?? true, // Define um valor padrão caso não esteja presente
                             'send_on_generate_payment' => $pixelData['send_purchase_on_generate_payment'] ?? false, // Define um valor padrão caso não esteja presente
                         ];
-                        $this->pixelservice::storePixel((object)$pixel); // Cast para objeto para manter a assinatura da função
+                        $this->pixelservice::storePixel($pixel); // Cast para objeto para manter a assinatura da função
                     }
                 }
             });
