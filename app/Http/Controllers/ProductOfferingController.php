@@ -116,7 +116,7 @@ class ProductOfferingController extends Controller
                         $pixel = (object)[
                             'pixel_id' => $pixelData['pixel_id'],
                             'product_offering_id' => $id_oferta,
-                            'access_token' => $pixelData['access_token'] ?? null,
+                            'access_token' => $pixelData['token'] ?? null,
                             'send_on_ic' => $pixelData['send_initiate_checkout'] ?? true, // Define um valor padrão caso não esteja presente
                             'send_on_generate_payment' => $pixelData['send_purchase_on_generate_payment'] ?? false, // Define um valor padrão caso não esteja presente
                         ];
