@@ -118,7 +118,7 @@ class ProductOfferingController extends Controller
             $responseData = [
                 'offer' => $createOffer,
                 'active_checkout' => $activeCheckout,
-                'integration_facebook' =>$request->input('integration_faceboook')
+                'integration_facebook' =>$request->input('integration_facebook')
             ];
             $this->removeCache($request->header('x-transaction-id'), 'user_' . Auth::id(). '_getOffers_');
             $this->removeCache($request->header('x-transaction-id'), 'user_' . Auth::id(). '_getOffersByProduct_' .$request->product_id);
@@ -131,7 +131,7 @@ class ProductOfferingController extends Controller
 
     public function PixelCreate($request, $offerid)
     {
-        $integrationFacebookData = $request->input('integration_faceboook', []);
+        $integrationFacebookData = $request->input('integration_facebook', []);
 
         if (is_array($integrationFacebookData)) {
             foreach ($integrationFacebookData as $pixelData) {
@@ -250,7 +250,7 @@ class ProductOfferingController extends Controller
                     })
                     ->delete();
             }
-            $this->PixelCreate($request, $id);
+             $this->PixelCreate($request, $id);
 
             $validated['checkouts'] = $checkoutData;
             $this->removeCache($request->header('x-transaction-id'), 'user_' . Auth::id(). '_getOffersById_' .$id);
