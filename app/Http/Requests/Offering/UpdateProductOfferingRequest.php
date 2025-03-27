@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Offering;
 
+use App\Http\Helpers\Responses;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateProductOfferingRequest extends FormRequest
 {
@@ -31,7 +34,15 @@ class UpdateProductOfferingRequest extends FormRequest
             'enable_card' => 'boolean',
             'enable_pix' => 'boolean',
             'sale_completed_page_url' => 'nullable|string',
-            'charge_type' => 'string'
+            'charge_type' => 'string',
+            'removed_facebook_pixel' => 'nullable|array',
+            'removed_facebook_pixel.*.id' => 'required|integer|distinct|min:1',
         ];
+    }
+
+    public function failedValidation(Validator $validator) {
+
+        throw new HttpResponseException(Responses::ERROR('Campos obrigatórios não preenchidos ou inválidos', $validator->errors(), '-1000', 400));
+
     }
 }

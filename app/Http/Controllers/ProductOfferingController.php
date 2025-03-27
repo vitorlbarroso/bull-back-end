@@ -8,6 +8,7 @@ use App\Http\Requests\Offering\CreateProductOfferingRequest;
 use App\Http\Requests\Offering\UpdateProductOfferingRequest;
 use App\Http\Requests\Pixels\PixelRequest;
 use App\Models\Checkout;
+use App\Models\OfferPixel;
 use App\Models\Product;
 use App\Models\ProductOffering;
 use App\Services\CheckoutService;
@@ -227,6 +228,23 @@ class ProductOfferingController extends Controller
                     'active_checkout' => $checkout->checkout_hash,
                 ];
             })->toArray();
+
+            // Remove os pixels do Facebook, se houver
+            if ($request->has('removed_facebook_pixel') && is_array($request->removed_facebook_pixel)) {
+                $idsToRemove = collect($request->removed_facebook_pixel)
+                    ->pluck('id')
+                    ->toArray();
+
+                Log::info('Analisando dados para remocao do Pixel', ['Pixel Id' => $idsToRemove]);
+
+                OfferPixel::whereIn('id', $idsToRemove)
+                    ->whereHas('productOffering', function ($poQuery) {
+                        $poQuery->whereHas('product', function ($productQuery) {
+                            $productQuery->where('user_id', Auth::id());
+                        });
+                    })
+                    ->delete();
+            }
 
             $validated['checkouts'] = $checkoutData;
             $this->removeCache($request->header('x-transaction-id'), 'user_' . Auth::id(). '_getOffersById_' .$id);
