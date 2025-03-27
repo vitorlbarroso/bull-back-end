@@ -16,6 +16,9 @@ class LogRequestResponse
         if ($request->is('horizon') || $request->is('horizon/*')) {
             return $next($request);
         }
+        if ($request->is('jobmanager') || $request->is('jobmanager/*')) {
+            return $next($request);
+        }
         // Gerar um UUID para a transação
         $transactionId = Str::uuid()->toString();
         // Adicionar o UUID ao cabeçalho da requisição
