@@ -37,6 +37,9 @@ class UpdateProductOfferingRequest extends FormRequest
             'charge_type' => 'string',
             'removed_facebook_pixel' => 'nullable|array',
             'removed_facebook_pixel.*.id' => 'required|integer|distinct|min:1',
+            'integration_faceboook' => 'nullable|array',
+            'integration_faceboook.*.pixel_id' => 'required|string',
+            'integration_faceboook.*.access_token' => 'nulllable|string',
         ];
     }
 

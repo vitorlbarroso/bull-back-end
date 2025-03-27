@@ -109,21 +109,8 @@ class ProductOfferingController extends Controller
                 $id_oferta['product_offering_id' ] = $createOffer->id;
                 $checkoutRequest = new CheckoutRequest($id_oferta);
                 $createCheckout = $this->checkoutService->createCheckout($checkoutRequest);
+                $this->PixelCreate($request, $createOffer->id);
 
-                $integrationFacebookData = $request->input('integration_faceboook', []);
-
-                if (is_array($integrationFacebookData)) {
-                    foreach ($integrationFacebookData as $pixelData) {
-                        $pixel = (object)[
-                            'pixel_id' => $pixelData['pixel_id'],
-                            'product_offering_id' => $createOffer->id,
-                            'access_token' => $pixelData['token'] ?? null,
-                            'send_on_ic' => $pixelData['send_initiate_checkout'] ?? true, // Define um valor padrão caso não esteja presente
-                            'send_on_generate_payment' => $pixelData['send_purchase_on_generate_payment'] ?? false, // Define um valor padrão caso não esteja presente
-                        ];
-                        $this->pixelservice::storePixel($pixel); // Cast para objeto para manter a assinatura da função
-                    }
-                }
             });
 
             $activeCheckout = $createOffer->checkouts()->where('is_active', true)->latest()->value('checkout_hash');
@@ -139,6 +126,24 @@ class ProductOfferingController extends Controller
         }catch (\Throwable $th) {
             Log::error('Não foi possível criar a oferta', ['error' => $th->getMessage()]);
             return Responses::ERROR('Não foi possível criar a oferta. Erro genérico não mapeado', null, '-9999', 400);
+        }
+    }
+
+    public function PixelCreate($request, $offerid)
+    {
+        $integrationFacebookData = $request->input('integration_faceboook', []);
+
+        if (is_array($integrationFacebookData)) {
+            foreach ($integrationFacebookData as $pixelData) {
+                $pixel = (object)[
+                    'pixel_id' => $pixelData['pixel_id'],
+                    'product_offering_id' =>$offerid,
+                    'access_token' => $pixelData['token'] ?? null,
+                    'send_on_ic' => $pixelData['send_initiate_checkout'] ?? true, // Define um valor padrão caso não esteja presente
+                    'send_on_generate_payment' => $pixelData['send_purchase_on_generate_payment'] ?? false, // Define um valor padrão caso não esteja presente
+                ];
+                $this->pixelservice::storePixel($pixel); // Cast para objeto para manter a assinatura da função
+            }
         }
     }
 
@@ -245,6 +250,7 @@ class ProductOfferingController extends Controller
                     })
                     ->delete();
             }
+            $this->PixelCreate($request, $id);
 
             $validated['checkouts'] = $checkoutData;
             $this->removeCache($request->header('x-transaction-id'), 'user_' . Auth::id(). '_getOffersById_' .$id);
