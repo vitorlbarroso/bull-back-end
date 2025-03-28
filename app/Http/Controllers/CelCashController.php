@@ -350,14 +350,15 @@ class CelCashController extends Controller
                     'status' => 'pending_pix',
                     'adquirer' => $adquirerName,
                 ]);
-
-                PendingPixelEvents::create([
-                    'product_offering_id' =>$getPrincipalOffer->id,
-                    'payment_id' => $createCelcashPayments->galax_pay_id,
-                    'event_name' => 'Purchase',
-                    'payload' => json_encode($validatedData['pixel_data']),
-                    'status' => 'Waiting Payment'
-                ]);
+                if (isset($validatedData['pixel_data'])) {
+                    PendingPixelEvents::create([
+                        'product_offering_id' => $getPrincipalOffer->id,
+                        'payment_id' => $createCelcashPayments->galax_pay_id,
+                        'event_name' => 'Purchase',
+                        'payload' => json_encode($validatedData['pixel_data']),
+                        'status' => 'Waiting Payment'
+                    ]);
+                }
 
                 if ($adquirerName == 'reflow') {
                     $createPixDetails = CelcashPaymentsPixData::create([
