@@ -355,7 +355,7 @@ class CelCashController extends Controller
                     'product_offering_id' =>$getPrincipalOffer->id,
                     'payment_id' => $createCelcashPayments->galax_pay_id,
                     'event_name' => 'Purchase',
-                    'payload' => json_encode($validatedData['pixel_data'),
+                    'payload' => json_encode($validatedData['pixel_data']),
                     'status' => 'Waiting Payment'
                 ]);
 
