@@ -14,6 +14,7 @@ use App\Models\CelcashPayments;
 use App\Models\CelcashPaymentsGatewayData;
 use App\Models\CelcashPaymentsOffers;
 use App\Models\CelcashPaymentsPixData;
+use App\Models\pendingPixelEvents;
 use App\Models\ProductOffering;
 use App\Models\User;
 use App\Models\UserCelcashCnpjCredentials;
@@ -348,6 +349,14 @@ class CelCashController extends Controller
                     'buyer_complement' => $validatedData['customer_complement'] ?? null,
                     'status' => 'pending_pix',
                     'adquirer' => $adquirerName,
+                ]);
+
+                PendingPixelEvents::create([
+                    'product_offering_id' =>$getPrincipalOffer->id,
+                    'payment_id' => $createCelcashPayments->galax_pay_id,
+                    'event_name' => 'Purchase',
+                    'payload' => json_encode($validatedData['pixel_data'),
+                    'status' => 'Waiting Payment'
                 ]);
 
                 if ($adquirerName == 'reflow') {

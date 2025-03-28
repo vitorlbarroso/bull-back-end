@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class pending_pixel_events extends Model
+class PendingPixelEvents extends Model
 {
     protected $casts = [
         'payload' => 'array',
