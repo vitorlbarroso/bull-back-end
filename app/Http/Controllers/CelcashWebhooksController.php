@@ -215,6 +215,7 @@ class CelcashWebhooksController extends Controller
                         $event->update(['status' => 'failed']);
                     }
                 }
+            }
 
             event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
         } else {
@@ -336,6 +337,7 @@ class CelcashWebhooksController extends Controller
                         // Se falhar, pode logar o erro e tentar novamente depois
                         $event->update(['status' => 'failed']);
                     }
+                }
             }
 
             event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
