@@ -20,6 +20,8 @@ class OfferPixel extends Model
 
     protected $casts = [
         'status' => 'boolean',
+        'send_on_ic' => 'boolean',
+        'send_on_generate_payment' => 'boolean',
     ];
 
     public function pixels(): BelongsTo

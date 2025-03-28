@@ -210,6 +210,8 @@ class CheckoutController extends Controller
                 return Responses::ERROR('Checkout indisponível!', null, 1100, 400);
             }
 
+
+
             return Responses::SUCCESS('', $getCheckout, 200);
         }
         catch (\Exception $e) {

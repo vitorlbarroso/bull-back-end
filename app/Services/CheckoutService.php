@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Http\Helpers\Responses;
 use App\Http\Requests\Checkout\CheckoutRequest;
 use App\Models\Checkout;
+use App\Models\OfferPixel;
 use App\Models\Timer;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -62,6 +63,7 @@ class CheckoutService
     public function getCheckoutData($hashIdentifier)
     {
         try {
+
             $checkout = Checkout::with([
                 'media:id,s3_name,s3_url',
                 'timer:id,is_fixed,countdown,display,end_timer_title,timer_title,timer_title_color,timer_bg_color,timer_icon_color,timer_progressbar_bg_color,timer_progressbar_color',
@@ -80,6 +82,19 @@ class CheckoutService
     }
     protected function formatCheckoutData($checkout)
     {
+
+        $initiateCheckoutPixels = OfferPixel::where('product_offering_id', $checkout->offer->id)
+            ->where('send_on_ic', true)
+            ->select('pixel as pixel_id',  DB::raw("IF(access_token IS NOT NULL AND access_token != '', true, false) as token"))
+            ->get()
+            ->toArray();
+
+        $PixelGeneratePayment = OfferPixel::where('product_offering_id', $checkout->offer->id)
+            ->where('send_on_generate_payment', true)
+            ->select('pixel as pixel_id',  DB::raw("IF(access_token IS NOT NULL AND access_token != '', true, false) as token"))
+            ->get()
+            ->toArray();
+
         return [
             'checkout_infos' => [
                 'id' => $checkout->id,
@@ -91,6 +106,8 @@ class CheckoutService
                 'is_active_contact_and_documents_fields' => $checkout->is_active_contact_and_documents_fields,
                 'is_active_address_fields' => $checkout->is_active_address_fields,
             ],
+            'initiate_checkout_pixels' => empty($initiateCheckoutPixels) ? null : $initiateCheckoutPixels,
+            'purchase_pixels' => empty($PixelGeneratePayment) ? null : $PixelGeneratePayment,
             'offer_data' => [
                 'id' => $checkout->offer->id,
                 'offer_name' => $checkout->offer->offer_name,
