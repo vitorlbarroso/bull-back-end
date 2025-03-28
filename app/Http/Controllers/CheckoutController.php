@@ -214,13 +214,13 @@ class CheckoutController extends Controller
 
             $initiateCheckoutPixels = OfferPixel::where('product_offering_id', $getCheckout->offer->id)
                 ->where('send_on_ic', true)
-                ->select('pixel as pixel_id',  DB::raw("IF(access_token IS NOT NULL AND access_token != '', true, false) as token"))
+                ->select('pixel as pixel_id',  DB::raw("IF(access_token IS NOT NULL AND access_token != '', true, false) as token"),'send_on_generate_payment')
                 ->get()
                 ->toArray();
 
             $PixelGeneratePayment = OfferPixel::where('product_offering_id',$getCheckout->offer->id)
                 ->where('send_on_generate_payment', true)
-                ->select('pixel as pixel_id',  DB::raw("IF(access_token IS NOT NULL AND access_token != '', true, false) as token"))
+                ->select('pixel as pixel_id', DB::raw("IF(access_token IS NOT NULL AND access_token != '', true, false) as token"), 'send_on_generate_payment')
                 ->get()
                 ->toArray();
 
