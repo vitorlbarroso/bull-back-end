@@ -2,7 +2,7 @@
 <html>
 <head>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <title>Pague seu PIX aqui!</title>
+    <title>A sua compra foi processada com sucesso!</title>
 
     <style>
         * {
@@ -116,64 +116,28 @@
                 <img src="https://images-bulls-pay.s3.us-east-1.amazonaws.com/logo.png">
             </figure>
 
-            <h2>{{ $name }}, você está quase lá!</h2>
+            <h2>{{ $name }}, o seu pagamento foi realizado com sucesso!</h2>
 
-            <p>Você está a poucos passos de concluir o seu pagamento. Realize agora mesmo seguindos esses passos:</p>
+            <p>Falta muito pouco para acessar os materiais adquiridos, para isso, siga os passos abaixo.</p>
         </header>
 
         <div class="infos">
             <div class="step">
                 <div class="step-number">1</div>
 
-                <p>Abra o aplicativo do seu banco de pagamentos.</p>
+                <p>Copie o código do seu pedido: {{ $paymentCode }}</p>
             </div>
 
             <div class="step">
                 <div class="step-number">2</div>
 
-                <p>Busque a opção de pagar com PIX.</p>
+                <p>Envie o seu código com o assunto <b>"Acesso compra - {{ $paymentCode }}"</b>: {{ $supportEmail }}</p>
             </div>
 
             <div class="step">
                 <div class="step-number">3</div>
 
-                <p>Copie e cole o código abaixo, ou leia o QR Code.</p>
-            </div>
-
-            <div class="payment-infos">
-                <p>Copie e Cole o código Pix no seu banco para realizar o pagamento:</p>
-                <p><strong>{{ $pixCode }}</strong></p>
-
-                <p>Ou escaneie o QR Code abaixo:</p>
-                <figure>
-                    <img src="https://quickchart.io/qr?text={{ $pixCode }}" alt="QR Code Pix" />
-                </figure>
-            </div>
-        </div>
-
-        <div class="payment-description">
-            <div class="line">
-                <div class="description">
-                    <h2>ID da transação</h2>
-                    <p>{{ $id }}</p>
-                </div>
-
-                <div class="description">
-                    <h2>Valor da transação</h2>
-                    <p>R$ {{ $price }}</p>
-                </div>
-            </div>
-
-            <div class="line">
-                <div class="description">
-                    <h2>Método de pagamento</h2>
-                    <p>Pix</p>
-                </div>
-
-                <div class="description">
-                    <h2>Contato do produtor</h2>
-                    <p>{{ $support }}</p>
-                </div>
+                <p>Pronto, agora é só você aproveitar os seus materiais! 🙂</p>
             </div>
         </div>
     </div>

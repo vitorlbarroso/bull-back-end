@@ -6,6 +6,8 @@ use App\Events\CoursePurchased;
 use App\Http\Helpers\Responses;
 use App\Http\Requests\CelCashGateway\Webhooks\UpdatePaymentRequest;
 use App\Http\Requests\CelCashGateway\Webhooks\VerifyDocumentsRequest;
+use App\Mail\AccountRepproved;
+use App\Mail\Sales\BuyerMail;
 use App\Models\CelcashConfirmHashWebhook;
 use App\Models\CelcashPayments;
 use App\Models\User;
@@ -14,7 +16,9 @@ use App\Models\UserCelcashCpfCredentials;
 use App\Models\ZendryTokens;
 use App\Services\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class CelcashWebhooksController extends Controller
 {
@@ -213,6 +217,14 @@ class CelcashWebhooksController extends Controller
         }*/
 
         $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['message']['reference_code'])
+            ->with('payment_offers', function($query) {
+                $query->where('type', 'principal')
+                    ->with('offer', function($query) {
+                        $query->with('product:id,email_support')
+                        ->select(['id', 'product_id']);
+                    })
+                ->select(['id', 'celcash_payments_id', 'products_offerings_id', 'type']);
+            })
             ->first();
 
         if (!$getTransaction) {
@@ -264,6 +276,13 @@ class CelcashWebhooksController extends Controller
                 'status' => $status,
                 'buyer_user_id' => $buyerUser->id
             ]);
+
+            try {
+                Mail::to($buyerUser->email)->send(new BuyerMail($buyerUser->name, $buyerUser->email, $getTransaction->payment_offers[0]->offer->product->email_support, $validatedData['message']['reference_code']));
+            }
+            catch (\Exception $e) {
+                Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao tentar enviar um e-mail de pagamento |', [ 'ERRO' => $e->getMessage()]);
+            }
 
             /*
              * ========================================================
