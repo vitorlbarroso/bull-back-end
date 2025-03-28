@@ -41,7 +41,7 @@
             padding: 10px 20px;
             margin: 20px 0;
             color: #FFF;
-            background-color: #FE0D8A;
+            background-color: #9747FFg;
             text-decoration: none;
             border-radius: 5px;
         }
@@ -56,17 +56,17 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://core-flame-images-dev.s3.amazonaws.com/logoflame.png" alt="Flame Pay">
+            <img src="https://images-bulls-pay.s3.us-east-1.amazonaws.com/logo.png" alt="Bulls Pay">
         </div>
         <div class="content">
             <h1>Recuperação de Senha</h1>
             <p>Olá, {{ $name }}</p>
             <p>Você solicitou a recuperação de sua senha. Clique no botão abaixo para redefinir sua senha.</p>
-            <a href="https://app.flamepay.com.br/recuperar-senha/{{ $token }}?email={{ $email }}" class="button" style="color:white">Redefinir Senha</a>
+            <a href="https://app.bullspay.com.br/recuperar-senha/{{ $token }}?email={{ $email }}" class="button" style="color:white">Redefinir Senha</a>
             <p>Se você não solicitou a recuperação de senha, por favor, ignore este e-mail.</p>
         </div>
         <div class="footer">
-            <p>Flame Pay &copy; Todos os direitos reservados.</p>
+            <p>Bulls Pay &copy; Todos os direitos reservados.</p>
         </div>
     </div>
 </body>

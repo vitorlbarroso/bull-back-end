@@ -34,7 +34,7 @@ class RecoverPasswordMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('nao-responda@plataformabulls.online', 'Bulls Pay'),
+            from: new Address('noreply@bullspay.com.br', 'Bulls Pay'),
             subject: 'A sua solicitação de recuperação de senha chegou!',
         );
     }
