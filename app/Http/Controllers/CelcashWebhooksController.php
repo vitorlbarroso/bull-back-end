@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\CoursePurchased;
+use App\Events\PixelEvent;
 use App\Http\Helpers\Responses;
 use App\Http\Requests\CelCashGateway\Webhooks\UpdatePaymentRequest;
 use App\Http\Requests\CelCashGateway\Webhooks\VerifyDocumentsRequest;
@@ -10,10 +11,12 @@ use App\Mail\AccountRepproved;
 use App\Mail\Sales\BuyerMail;
 use App\Models\CelcashConfirmHashWebhook;
 use App\Models\CelcashPayments;
+use App\Models\PendingPixelEvents;
 use App\Models\User;
 use App\Models\UserCelcashCnpjCredentials;
 use App\Models\UserCelcashCpfCredentials;
 use App\Models\ZendryTokens;
+use App\Services\PixelEventService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -195,6 +198,24 @@ class CelcashWebhooksController extends Controller
              * E INICIA AS AULAS COM O PROGRESSO ZERADO
              * =============================================================
              */
+
+            $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['message']['reference_code'])
+                ->where('status', 'Waiting Payment')
+                ->with('offerPixels')
+                ->get();
+            if ($pendingEvents->isNotEmpty()) {
+                foreach ($pendingEvents as $event) {
+                    try {
+                        // Envia evento de conversão
+                        event(new PixelEvent($event->offerPixels->pixel, $event->event_name, $event->payload, $request->header('x-transaction-id')));
+                        // Marca o evento como enviado
+                        $event->update(['status' => 'sent']);
+                    } catch (\Exception $e) {
+                        // Se falhar, pode logar o erro e tentar novamente depois
+                        $event->update(['status' => 'failed']);
+                    }
+                }
+
             event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
         } else {
             $getTransaction->update([
@@ -299,6 +320,24 @@ class CelcashWebhooksController extends Controller
              * E INICIA AS AULAS COM O PROGRESSO ZERADO
              * =============================================================
              */
+            $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['orderId'])
+                ->where('status', 'Waiting Payment')
+                ->with('offerPixels')
+                ->get();
+
+            if ($pendingEvents->isNotEmpty() ) {
+                foreach ($pendingEvents as $event) {
+                    try {
+                        // Envia evento de conversão
+                        event(new PixelEvent($event->offerPixels->pixel, $event->event_name, $event->payload, $request->header('x-transaction-id')));
+                        // Marca o evento como enviado
+                        $event->update(['status' => 'sent']);
+                    } catch (\Exception $e) {
+                        // Se falhar, pode logar o erro e tentar novamente depois
+                        $event->update(['status' => 'failed']);
+                    }
+            }
+
             event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
         } else {
             $getTransaction->update([

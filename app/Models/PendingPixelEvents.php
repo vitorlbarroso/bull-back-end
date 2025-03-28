@@ -16,6 +16,11 @@ class PendingPixelEvents extends Model
         return $this->belongsTo(ProductOffering::class, 'products_offering_id');
     }
 
+    public function offerPixels()
+    {
+        return $this->hasMany(OfferPixel::class, 'product_offering_id', 'offer_id');
+    }
+
     public function pixels(): BelongsTo
     {
         return $this->belongsTo(pixels::class);
