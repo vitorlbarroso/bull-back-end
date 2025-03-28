@@ -7,9 +7,11 @@ use App\Http\Requests\Checkout\CheckoutRequest;
 use App\Http\Requests\Checkout\UpdatecheckoutRequest;
 use App\Models\CelcashPayments;
 use App\Models\Checkout;
+use App\Models\OfferPixel;
 use App\Models\ProductOffering;
 use App\Services\CheckoutService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
@@ -210,7 +212,20 @@ class CheckoutController extends Controller
                 return Responses::ERROR('Checkout indisponível!', null, 1100, 400);
             }
 
+            $initiateCheckoutPixels = OfferPixel::where('product_offering_id', $getCheckout->offer->id)
+                ->where('send_on_ic', true)
+                ->select('pixel as pixel_id',  DB::raw("IF(access_token IS NOT NULL AND access_token != '', true, false) as token"))
+                ->get()
+                ->toArray();
 
+            $PixelGeneratePayment = OfferPixel::where('product_offering_id',$getCheckout->offer->id)
+                ->where('send_on_generate_payment', true)
+                ->select('pixel as pixel_id',  DB::raw("IF(access_token IS NOT NULL AND access_token != '', true, false) as token"))
+                ->get()
+                ->toArray();
+
+            $getCheckout->initiate_checkout_pixels = empty($initiateCheckoutPixels) ? null : $initiateCheckoutPixels;
+            $getCheckout->purchase_pixels = empty($PixelGeneratePayment) ? null : $PixelGeneratePayment;
 
             return Responses::SUCCESS('', $getCheckout, 200);
         }
