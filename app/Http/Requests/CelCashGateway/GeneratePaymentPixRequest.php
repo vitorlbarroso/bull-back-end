@@ -36,7 +36,7 @@ class GeneratePaymentPixRequest extends FormRequest
             'customer_complement' => 'nullable|string',
             'pixel_data' => 'nullable|array',
             'pixel_data.offer_id' => 'nullable|integer',
-            'pixel_data.event_name' => 'required|string|max:255',
+            'pixel_data.event_name' => 'nullable|string|max:255',
             'pixel_data.event_source_url' => 'nullable|url',
             'pixel_data.event_time' => 'nullable|integer',
             'pixel_data.action_source' => 'nullable|string|in:website,app,other', // Ajuste conforme o contexto
