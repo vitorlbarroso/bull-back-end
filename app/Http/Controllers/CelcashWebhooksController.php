@@ -92,6 +92,14 @@ class CelcashWebhooksController extends Controller
         $validatedData = $request->validated();
 
         $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['orderId'])
+            ->with('payment_offers', function($query) {
+                $query->where('type', 'principal')
+                    ->with('offer', function($query) {
+                        $query->with('product:id,email_support')
+                            ->select(['id', 'product_id']);
+                    })
+                    ->select(['id', 'celcash_payments_id', 'products_offerings_id', 'type']);
+            })
             ->first();
 
         if (!$getTransaction) {
@@ -174,11 +182,12 @@ class CelcashWebhooksController extends Controller
                 'buyer_user_id' => $buyerUser->id
             ]);
 
-            /*
-             * ========================================================
-             * ADICIONAR ENVIO DE E-MAIL DE COMPRA PARA O USUÁRIO
-             * ========================================================
-             * */
+            try {
+                Mail::to($buyerUser->email)->send(new BuyerMail($buyerUser->name, $buyerUser->email, $getTransaction->payment_offers[0]->offer->product->email_support, $validatedData['orderId']));
+            }
+            catch (\Exception $e) {
+                Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao tentar enviar um e-mail de pagamento |', [ 'ERRO' => $e->getMessage()]);
+            }
 
             /*
              * =============================================================
@@ -283,12 +292,6 @@ class CelcashWebhooksController extends Controller
             catch (\Exception $e) {
                 Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao tentar enviar um e-mail de pagamento |', [ 'ERRO' => $e->getMessage()]);
             }
-
-            /*
-             * ========================================================
-             * ADICIONAR ENVIO DE E-MAIL DE COMPRA PARA O USUÁRIO
-             * ========================================================
-             * */
 
             /*
              * =============================================================
