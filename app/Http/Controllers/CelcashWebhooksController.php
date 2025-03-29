@@ -296,8 +296,7 @@ class CelcashWebhooksController extends Controller
             'message.reference_code' => 'required',
             'message.status' => 'required',
             'message.end_to_end' => 'required',
-            'message.value_cents' => 'required',
-            'md5' => 'required',
+            'message.value_cents' => 'required'
         ]);
 
         /*$getSecretToken = ZendryTokens::where('type', 'private_token')->first();
