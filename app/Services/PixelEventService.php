@@ -108,7 +108,7 @@ class PixelEventService
 
    public static function FormatDataPixel(array $data): array
     {
-        Log::info('FUNCAO FORMATDATAPIXEL', ["receveid_data" => $data]);
+        Log::info('FUNCAO FORMATDATAPIXEL', ["receveid_data" => $data['event_name']]);
         // Mapeia as transformações necessárias para cada campo
         $transformations = [
             'em' => 'lowercase_hash256',
