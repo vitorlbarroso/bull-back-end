@@ -344,7 +344,7 @@ class CelcashWebhooksController extends Controller
                     }
                 }
             }
-            if($getTransaction->payment_offers->offer->utmify_token) {
+            if($getTransaction->payment_offers[0]->offer->utmify_token) {
                 try {
                     $body = [
                         "orderId" => $validatedData['message']['reference_code'],
@@ -364,11 +364,11 @@ class CelcashWebhooksController extends Controller
                         ],
                         "products" =>[
                             "id" => $getTransaction->galax_pay_id,
-                            "name" => $getTransaction->payment_offers->offer->product->product_name,
+                            "name" => $getTransaction->payment_offers[0]->offer->product->product_name,
                             "planId" => null,
                             "planName" => null,
                             "quantity" => 1,
-                            "priceInCents" => $getTransaction->payment_offers->offer->price * 100
+                            "priceInCents" => $getTransaction->payment_offers[0]->offer->price * 100
                         ],
                         "trackingParameters" => [
                             "src" => null,
