@@ -45,6 +45,9 @@ class PixelEventService
         $eventData =['data' => [ $eventData] ];
         $ACCESS_TOKEN = $offer_pixel->access_token;
         $PIXEL = $offer_pixel->pixel;
+        if (is_array($eventData) && isset($data['offer_id'])) {
+            unset($data['offer_id']); // Remover 'offer_id' da raiz do array
+        }
         Log::debug($event->TID."| Realizando POST no facebook|",["url"=>'https://graph.facebook.com/'.$API_VERSION.'/'.$PIXEL.'/events?access_token='.$ACCESS_TOKEN]);
         Log::debug($event->TID."| Realizando envio do Pixel via ServiceFacebook|",["Data"=>$eventData ]);
 
