@@ -94,7 +94,7 @@ class ProductOfferingController extends Controller
                 $createOffer = ProductOffering::create([
                     'user_id'=> $user->id,
                     'product_id'=> $request->product_id,
-                    'utmify_token'=> $request->utmify_token || null,
+                    'utmify_token'=> $request->utmify_token,
                     'offer_name'=> $request->offer_name,
                     'description'=> $request->offer_name,
                     'price'=> $request->price,
@@ -107,6 +107,9 @@ class ProductOfferingController extends Controller
                     'enable_pix'=> $request->enable_pix,
                     'sale_page_completed_url'=> $request->sale_page_completed_url,
                 ]);
+
+                return $request->utmify_token;
+
                 $id_oferta['product_offering_id' ] = $createOffer->id;
                 $checkoutRequest = new CheckoutRequest($id_oferta);
                 $createCheckout = $this->checkoutService->createCheckout($checkoutRequest);

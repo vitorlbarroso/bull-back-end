@@ -37,6 +37,7 @@ class ProductOffering extends Model
     protected $casts = [
         'offer_type' => OfferTypeEnum::class,
         'charge_type' => OfferChargeTypeEnum::class,
+        'utmify_token' => 'string',
     ];
 
     public function product(): BelongsTo
