@@ -364,13 +364,13 @@ class CelCashController extends Controller
                             'product_offering_id' => $getPrincipalOffer->id,
                             'payment_id' => $createCelcashPayments->galax_pay_id,
                             'event_name' => 'Purchase',
-                            'payload' => json_encode($validatedData['pixel_data']),
+                            'payload' => json_encode($request->input('pixel_data')),
                             'status' => 'Waiting Payment'
                         ]); // salvo na tabela o evento do pixel para disparar após a confirmacao do pagamento
                     }
                 }else{
                     Log::info("Colocando na fila o evento para disparar o pixel", ["pixel" => $request->input('pixel_data')]);
-                    event(new PixelEvent($getPrincipalOffer->id, 'Purchase', $validatedData['pixel_data'], $request->header('x-transaction-id')));
+                    event(new PixelEvent($getPrincipalOffer->id, 'Purchase',  $request->input('pixel_data'), $request->header('x-transaction-id')));
                 }
 
 
