@@ -372,7 +372,9 @@ class CelCashController extends Controller
                         ]); // salvo na tabela o evento do pixel para disparar após a confirmacao do pagamento
                     }
                 }else{
+                    Log::info("Não foram encontrados pixels para enviar ao gerar pagamento", ["pixel" => $offerPixels]);
                     if (isset($validatedData['pixel_data'])) {
+                        Log::info("Validando campos de pixel para enviar ao ser pago", []);
                         $pixel_data=PixelEventService::FormatDataPixel($validatedData['pixel_data']);
                         Log::info("Colocando na fila o evento para disparar o pixel", ["pixel" => $pixel_data]);
                         event(new PixelEvent($getPrincipalOffer->id, 'Purchase', $pixel_data, $request->header('x-transaction-id')));
