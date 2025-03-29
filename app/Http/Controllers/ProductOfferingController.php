@@ -94,6 +94,7 @@ class ProductOfferingController extends Controller
                 $createOffer = ProductOffering::create([
                     'user_id'=> $user->id,
                     'product_id'=> $request->product_id,
+                    'utmify_token'=> $request->utmify_token || null,
                     'offer_name'=> $request->offer_name,
                     'description'=> $request->offer_name,
                     'price'=> $request->price,

@@ -27,6 +27,7 @@ class UpdateProductOfferingRequest extends FormRequest
         return [
             'offer_name' => 'string|min:3',
             'price' => 'numeric',
+            'utmify_token' => 'nullable|string',
             'fake_price' => 'numeric',
             'offer_type' => 'string|min:1',
             'recurrently_installments' => 'integer',

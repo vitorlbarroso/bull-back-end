@@ -18,6 +18,7 @@ class ProductOffering extends Model
     protected $fillable = [
         'offer_name',
         'product_id',
+        'utmify_token',
         'description',
         'fake_price',
         'price',
