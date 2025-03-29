@@ -321,7 +321,7 @@ class CelcashWebhooksController extends Controller
              * E INICIA AS AULAS COM O PROGRESSO ZERADO
              * =============================================================
              */
-            $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['orderId'])
+            $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['message']['reference_code'])
                 ->where('status', 'Waiting Payment')
                 ->get();
 
