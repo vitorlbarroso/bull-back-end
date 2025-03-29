@@ -359,6 +359,8 @@ class CelCashController extends Controller
                     ->where('send_on_generate_payment', true)
                     ->get();
 
+              return $offerPixels;
+
                 Log::info("Validando os pixel para ser enviado agora ao gerar pagamento", ["pixel" => $offerPixels]);
                 if($offerPixels && $offerPixels->isEmpty()) { //valido se estiver vazio pois significa que nenhum pixel cadastro para a oferta é para disparar antes do pagamento
                     Log::info("Pixel a ser disparado na confirmacão do pagamento", ["pixel" => $validatedData['pixel_data']]);
