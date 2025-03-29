@@ -360,7 +360,7 @@ class CelCashController extends Controller
                     ->get();
 
                 Log::info("Validando os pixel para ser enviado agora ao gerar pagamento", ["pixel" => $offerPixels]);
-                if($offerPixels && $offerPixels->isEmpty()) { //valido se estiver vazio pois significa que nenhum pixel cadastro para a oferta é para disparar antes do pagamento
+                /*if($offerPixels && $offerPixels->isEmpty()) { //valido se estiver vazio pois significa que nenhum pixel cadastro para a oferta é para disparar antes do pagamento
                     Log::info("Pixel a ser disparado na confirmacão do pagamento", ["pixel" => $validatedData['pixel_data']]);
                     if (isset($validatedData['pixel_data'])) {
                         PendingPixelEvents::create([
@@ -379,7 +379,7 @@ class CelCashController extends Controller
                         Log::info("Colocando na fila o evento para disparar o pixel", ["pixel" => $pixel_data]);
                         event(new PixelEvent($getPrincipalOffer->id, 'Purchase', $pixel_data, $request->header('x-transaction-id')));
                     }
-                }
+                }*/
 
                 if ($getPrincipalOffer->utmify_token) {
                     try {
