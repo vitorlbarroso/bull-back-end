@@ -387,8 +387,7 @@ class CelcashWebhooksController extends Controller
                         "isTest" => false
                     ];
                     $headers = [
-                        'x-api-token' => $getTransaction->payment_offers[0]->offer->utmify_token,
-                        'Content-Type' => 'application/json'
+                        'x-api-token' => $getTransaction->payment_offers[0]->offer->utmify_token
                     ];
                     $utmify =Http::WithHeaders($headers)
                         ->post(
