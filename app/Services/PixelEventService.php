@@ -121,7 +121,7 @@ class PixelEventService
             'st' => 'lowercase_hash256',
             'db' => 'hash256',
         ];
-
+        return $data;
         // Aplica as transformações especificadas no mapeamento
         foreach ($transformations as $key => $transformation) {
             if (isset($data['user_data'][$key]) && is_array($data['user_data'][$key])) {
