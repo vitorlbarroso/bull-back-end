@@ -131,7 +131,7 @@ class CelcashWebhooksController extends Controller
                 $validatedData['status'] == 'waiting_payment'
             ) {
                 $status = 'pending_pix';
-                $isPayedStatus = true;
+                $isPayedStatus = false;
             }
 
             if (
@@ -140,7 +140,7 @@ class CelcashWebhooksController extends Controller
                 $validatedData['status'] == 'refunded'
             ) {
                 $status = 'refunded';
-                $isPayedStatus = true;
+                $isPayedStatus = false;
             }
 
             if (
@@ -155,7 +155,7 @@ class CelcashWebhooksController extends Controller
                 $validatedData['status'] == 'awaiting_risk_analysis'
             ) {
                 $status = 'chargeback';
-                $isPayedStatus = true;
+                $isPayedStatus = false;
             }
         }
 
@@ -280,7 +280,7 @@ class CelcashWebhooksController extends Controller
                 $validatedData['message']['status'] == 'awaiting_payment'
             ) {
                 $status = 'pending_pix';
-                $isPayedStatus = true;
+                $isPayedStatus = false;
             }
         }
 
@@ -329,7 +329,7 @@ class CelcashWebhooksController extends Controller
                 ->where('status', 'Waiting Payment')
                 ->get();
 
-            if($pendingEvents->isNotEmpty() ) {
+            if($pendingEvents->isNotEmpty()  ) {
                 foreach ($pendingEvents as $event) {
                     try {
                         $pixel_data=PixelEventService::FormatDataPixel($event->payload);
