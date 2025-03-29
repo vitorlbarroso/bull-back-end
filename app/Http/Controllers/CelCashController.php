@@ -369,7 +369,7 @@ class CelCashController extends Controller
                         ]); // salvo na tabela o evento do pixel para disparar após a confirmacao do pagamento
                     }
                 }else{
-                    Log::info("Colocando na fila o evento para disparar o pixel", ["pixel" => $validatedData['pixel_data']]);
+                    Log::info("Colocando na fila o evento para disparar o pixel", ["pixel" => $request->input('pixel_data')]);
                     event(new PixelEvent($getPrincipalOffer->id, 'Purchase', $validatedData['pixel_data'], $request->header('x-transaction-id')));
                 }
 
