@@ -12,7 +12,7 @@ class UploadMediaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => 'required|max:2048',
+            'file' => 'required|max:6048',
         ];
     }
 
