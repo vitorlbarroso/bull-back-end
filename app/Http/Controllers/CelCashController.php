@@ -16,7 +16,7 @@ use App\Models\CelcashPaymentsGatewayData;
 use App\Models\CelcashPaymentsOffers;
 use App\Models\CelcashPaymentsPixData;
 use App\Models\OfferPixel;
-use App\Models\pendingPixelEvents;
+use App\Models\PendingPixelEvents;
 use App\Models\ProductOffering;
 use App\Models\User;
 use App\Models\UserCelcashCnpjCredentials;
