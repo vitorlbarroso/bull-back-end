@@ -24,6 +24,7 @@ use App\Models\UserCelcashCnpjDocuments;
 use App\Models\UserCelcashCpfCredentials;
 use App\Models\UserCelcashCpfDocuments;
 use App\Services\CelCashService;
+use App\Services\PixelEventService;
 use App\Services\UserService;
 use DateTime;
 use Illuminate\Http\Request;
@@ -369,8 +370,9 @@ class CelCashController extends Controller
                         ]); // salvo na tabela o evento do pixel para disparar após a confirmacao do pagamento
                     }
                 }else{
-                    Log::info("Colocando na fila o evento para disparar o pixel", ["pixel" => $request->input('pixel_data')]);
-                    event(new PixelEvent($getPrincipalOffer->id, 'Purchase',  $request->input('pixel_data'), $request->header('x-transaction-id')));
+                   $pixel_data=PixelEventService::FormatDataPixel($request->input('pixel_data'));
+                    Log::info("Colocando na fila o evento para disparar o pixel", ["pixel" => $pixel_data]);
+                    event(new PixelEvent($getPrincipalOffer->id, 'Purchase', $pixel_data, $request->header('x-transaction-id')));
                 }
 
 
