@@ -391,7 +391,7 @@ class CelcashWebhooksController extends Controller
                     ];
                     $utmify =Http::WithHeaders($headers)
                         ->post(
-                            'https://api.utmify.com.br/api-credentials/order',
+                            'https://api.utmify.com.br/api-credentials/orders',
                             $body
                         );
                     Log::info("Evento enviado ao UTMIFY ", ["Response" => $utmify]);
