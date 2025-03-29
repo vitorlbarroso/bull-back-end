@@ -344,7 +344,7 @@ class CelcashWebhooksController extends Controller
                     }
                 }
             }
-            if($getTransaction?->offer?->utmify_token) {
+            if($getTransaction->payment_offers->offer->utmify_token) {
                 try {
                     $body = [
                         "orderId" => $validatedData['message']['reference_code'],
