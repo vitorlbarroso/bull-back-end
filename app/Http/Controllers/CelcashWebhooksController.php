@@ -383,8 +383,8 @@ class CelcashWebhooksController extends Controller
                         ],
                         "commission" => [
                             "totalPriceInCents" => $getTransaction->total_value,
-                            "gatewayFeeInCents" => $getTransaction->value_to_receiver,
-                            "userCommissionInCents" => $getTransaction->value_to_platform
+                            "gatewayFeeInCents" => $getTransaction->value_to_platform,
+                            "userCommissionInCents" => $getTransaction->value_to_receiver
                         ],
                         "isTest" => false
                     ];
