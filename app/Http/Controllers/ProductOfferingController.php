@@ -108,8 +108,6 @@ class ProductOfferingController extends Controller
                     'sale_page_completed_url'=> $request->sale_page_completed_url,
                 ]);
 
-                return $request->utmify_token;
-
                 $id_oferta['product_offering_id' ] = $createOffer->id;
                 $checkoutRequest = new CheckoutRequest($id_oferta);
                 $createCheckout = $this->checkoutService->createCheckout($checkoutRequest);
