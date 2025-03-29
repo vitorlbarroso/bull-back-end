@@ -363,12 +363,14 @@ class CelcashWebhooksController extends Controller
                             "IP" =>null
                         ],
                         "products" =>[
-                            "id" => $getTransaction->galax_pay_id,
-                            "name" => $getTransaction->payment_offers[0]->offer->product->product_name,
-                            "planId" => null,
-                            "planName" => null,
-                            "quantity" => 1,
-                            "priceInCents" => $getTransaction->payment_offers[0]->offer->price * 100
+                            [
+                                "id" => $getTransaction->galax_pay_id,
+                                "name" => $getTransaction->payment_offers[0]->offer->product->product_name,
+                                "planId" => null,
+                                "planName" => null,
+                                "quantity" => 1,
+                                "priceInCents" => $getTransaction->payment_offers[0]->offer->price * 100
+                            ]
                         ],
                         "trackingParameters" => [
                             "src" => null,
@@ -381,8 +383,8 @@ class CelcashWebhooksController extends Controller
                         ],
                         "commission" => [
                             "totalPriceInCents" => $getTransaction->total_value,
-                            "gatewayFeeInCents" => $getTransaction->total_to_receiver,
-                            "userCommissionInCents" => $getTransaction->total_to_platform
+                            "gatewayFeeInCents" => $getTransaction->value_to_receiver,
+                            "userCommissionInCents" => $getTransaction->value_to_platform
                         ],
                         "isTest" => false
                     ];
