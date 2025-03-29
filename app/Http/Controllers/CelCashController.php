@@ -29,6 +29,7 @@ use App\Services\UserService;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -375,7 +376,63 @@ class CelCashController extends Controller
                     event(new PixelEvent($getPrincipalOffer->id, 'Purchase', $pixel_data, $request->header('x-transaction-id')));
                 }
 
-
+                if ($getPrincipalOffer->utmify_token) {
+                    try {
+                        $body = [
+                            "orderId" => $createCelcashPayments->galax_pay_id,
+                            "platform" => "BullsPay",
+                            "paymentMethod" => "pix",
+                            "status" => "waiting_payment",
+                            "createdAt" => $createCelcashPayments->created_at,
+                            "approvedDate" => $createCelcashPayments->updated_at,
+                            "refundedAt" => null,
+                            "customer" => [
+                                "name" => $validatedData['customer_name'],
+                                "email" => $validatedData['customer_email'],
+                                "phone" => null,
+                                "document" => $validatedData['customer_document'] ?? null,
+                                "country" => "BR",
+                                "IP" =>null
+                            ],
+                            "products" =>[
+                                [
+                                    "id" => $createCelcashPayments->galax_pay_id,
+                                    "name" => $getPrincipalOffer->product->product_name,
+                                    "planId" => null,
+                                    "planName" => null,
+                                    "quantity" => 1,
+                                    "priceInCents" => $getPrincipalOffer->price * 100
+                                ]
+                            ],
+                            "trackingParameters" => [
+                                "src" => null,
+                                "sck"=> null,
+                                "utm_source"=> null,
+                                "utm_campaign"=> null,
+                                "utm_medium"=> null,
+                                "utm_content"=> null,
+                                "utm_term"=> null
+                            ],
+                            "commission" => [
+                                "totalPriceInCents" => $createCelcashPayments->total_value,
+                                "gatewayFeeInCents" => $createCelcashPayments->value_to_platform,
+                                "userCommissionInCents" => $createCelcashPayments->value_to_receiver
+                            ],
+                            "isTest" => false
+                        ];
+                        $headers = [
+                            'x-api-token' => $getPrincipalOffer->utmify_token
+                        ];
+                        $utmify =Http::WithHeaders($headers)
+                            ->post(
+                                'https://api.utmify.com.br/api-credentials/orders',
+                                $body
+                            );
+                        Log::info("Evento enviado ao UTMIFY ", ["Response" => $utmify]);
+                    } catch (\Exception $e) {
+                        Log::error("Erro ao enviar Request para UTMIFY", ["erro" => $e->getMessage()]);
+                    }
+                }
 
                 if ($adquirerName == 'reflow') {
                     $createPixDetails = CelcashPaymentsPixData::create([
