@@ -362,7 +362,7 @@ class CelCashController extends Controller
                     Log::info("Pixel a ser disparado na confirmacão do pagamento", ["pixel" => $offerPixels]);
                     if (isset($validatedData['pixel_data'])) {
                         PendingPixelEvents::create([
-                            'product_offering_id' => $getPrincipalOffer->id,
+                            'offer_id' => $getPrincipalOffer->id,
                             'payment_id' => $createCelcashPayments->galax_pay_id,
                             'event_name' => 'Purchase',
                             'payload' => $validatedData['pixel_data'],

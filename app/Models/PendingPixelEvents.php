@@ -9,7 +9,7 @@ class PendingPixelEvents extends Model
 {
 
     protected $fillable = [
-        'product_offering_id',
+        'offer_id',
         'payment_id',
         'event_name',
         'payload',
