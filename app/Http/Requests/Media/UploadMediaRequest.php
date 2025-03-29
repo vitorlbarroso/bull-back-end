@@ -11,6 +11,12 @@ class UploadMediaRequest extends FormRequest
 {
     public function rules(): array
     {
+        \Log::debug('Request completa:', [
+            'all' => $this->all(),
+            'files' => $this->file(),
+            'has_file' => $this->hasFile('file'),
+        ]);
+
         return [
             'file' => 'required|max:6048',
         ];
