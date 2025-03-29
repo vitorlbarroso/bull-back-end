@@ -221,6 +221,64 @@ class CelcashWebhooksController extends Controller
                 }
             }
 
+            if($getTransaction->payment_offers[0]->offer->utmify_token) {
+                try {
+                    $body = [
+                        "orderId" => $validatedData['orderId'],
+                        "platform" => "BullsPay",
+                        "paymentMethod" => "pix",
+                        "status" => "paid",
+                        "createdAt" => $getTransaction->created_at,
+                        "approvedDate" => $getTransaction->updated_at,
+                        "refundedAt" => null,
+                        "customer" => [
+                            "name" => $getTransaction->buyer_name,
+                            "email" => $getTransaction->buyer_email,
+                            "phone" => null,
+                            "document" => $getTransaction->buyer_document_cpf,
+                            "country" => "BR",
+                            "IP" =>null
+                        ],
+                        "products" =>[
+                            [
+                                "id" => $getTransaction->galax_pay_id,
+                                "name" => $getTransaction->payment_offers[0]->offer->product->product_name,
+                                "planId" => null,
+                                "planName" => null,
+                                "quantity" => 1,
+                                "priceInCents" => $getTransaction->payment_offers[0]->offer->price * 100
+                            ]
+                        ],
+                        "trackingParameters" => [
+                            "src" => null,
+                            "sck"=> null,
+                            "utm_source"=> null,
+                            "utm_campaign"=> null,
+                            "utm_medium"=> null,
+                            "utm_content"=> null,
+                            "utm_term"=> null
+                        ],
+                        "commission" => [
+                            "totalPriceInCents" => $getTransaction->total_value,
+                            "gatewayFeeInCents" => $getTransaction->value_to_platform,
+                            "userCommissionInCents" => $getTransaction->value_to_receiver
+                        ],
+                        "isTest" => false
+                    ];
+                    $headers = [
+                        'x-api-token' => $getTransaction->payment_offers[0]->offer->utmify_token
+                    ];
+                    $utmify =Http::WithHeaders($headers)
+                        ->post(
+                            'https://api.utmify.com.br/api-credentials/orders',
+                            $body
+                        );
+                    Log::info("Evento enviado ao UTMIFY ", ["Response" => $utmify]);
+                } catch (\Exception $e) {
+                    Log::error("Erro ao enviar Request para UTMIFY", ["erro" => $e->getMessage()]);
+                }
+            }
+
             event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
         } else {
             $getTransaction->update([
