@@ -104,7 +104,24 @@ class ProductController extends Controller
         $itemsPerPage = $request->query('items_per_page', 10);
 
         try {
-            $offers = $this->getOrSetCache($request->header('x-transaction-id'),'user_' . $user->id . '_getOffersByProduct_'.$product_id, function () use ($user,$product_id, $itemsPerPage) {
+            $offers = ProductOffering::whereHas('product', function ($query) use ($user, $product_id) {
+                $query->where('user_id', $user->id)
+                    ->where('id', $product_id)
+                    ->where('is_deleted', 0);
+            })
+                ->where('is_deleted', 0)
+                ->with(['checkouts' => function ($query) {
+                    $query->where('is_active', 1)
+                        ->orderBy('id', 'desc')
+                        ->select('id', 'checkout_hash as active_checkout', 'product_offering_id');
+                }])
+                ->with(['offerPixels' => function($query) {
+                    $query->where('status', 1);
+                }])
+                ->orderByDesc('id')
+                ->paginate($itemsPerPage);
+
+            /*$offers = $this->getOrSetCache($request->header('x-transaction-id'),'user_' . $user->id . '_getOffersByProduct_'.$product_id, function () use ($user,$product_id, $itemsPerPage) {
                 return ProductOffering::whereHas('product', function ($query) use ($user, $product_id) {
                 $query->where('user_id', $user->id)
                     ->where('id', $product_id)
@@ -121,7 +138,7 @@ class ProductController extends Controller
                     }])
                 ->orderByDesc('id')
                 ->paginate($itemsPerPage);
-        }, 600); // Cache por 10 minutos (600 segundos)
+        }, 600); // Cache por 10 minutos (600 segundos)*/
 
             $formattedOffers = $offers->through(function ($offer) {
                 return $this->formatOffersWithPixels($offer);
