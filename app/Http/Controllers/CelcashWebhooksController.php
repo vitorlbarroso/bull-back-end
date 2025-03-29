@@ -18,8 +18,10 @@ use App\Models\UserCelcashCpfCredentials;
 use App\Models\ZendryTokens;
 use App\Services\PixelEventService;
 use App\Services\UserService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -253,8 +255,8 @@ class CelcashWebhooksController extends Controller
             ->with('payment_offers', function($query) {
                 $query->where('type', 'principal')
                     ->with('offer', function($query) {
-                        $query->with('product:id,email_support')
-                        ->select(['id', 'product_id']);
+                        $query->with('product:id,email_support,product_name')
+                        ->select(['id', 'product_id', 'utmify_token']);
                     })
                 ->select(['id', 'celcash_payments_id', 'products_offerings_id', 'type']);
             })
@@ -342,6 +344,64 @@ class CelcashWebhooksController extends Controller
                     }
                 }
             }
+            if($getTransaction->offer->utmify_token) {
+                try {
+                    $body = [
+                        "orderId" => $validatedData['message']['reference_code'],
+                        "platform" => "BullsPay",
+                        "paymentMethod" => "pix",
+                        "status" => "paid",
+                        "createdAt" => $getTransaction->created_at,
+                        "approvedDate" => $getTransaction->updated_at,
+                        "refundedAt" => null,
+                        "customer" => [
+                            "name" => $getTransaction->buyer_name,
+                            "email" => $getTransaction->buyer_email,
+                            "phone" => null,
+                            "document" => $getTransaction->buyer_document_cpf,
+                            "country" => "BR",
+                            "IP" =>null
+                        ],
+                        "products" =>[
+                            "id" => $getTransaction->galax_pay_id,
+                            "name" => $getTransaction->payment_offers->offer->product->product_name,
+                            "planId" => null,
+                            "planName" => null,
+                            "quantity" => 1,
+                            "priceInCents" => $getTransaction->payment_offers->offer->price * 100
+                        ],
+                        "trackingParameters" => [
+                            "src" => null,
+                            "sck"=> null,
+                            "utm_source"=> null,
+                            "utm_campaign"=> null,
+                            "utm_medium"=> null,
+                            "utm_content"=> null,
+                            "utm_term"=> null
+                        ],
+                        "commission" => [
+                            "totalPriceInCents" => $getTransaction->total_value,
+                            "gatewayFeeInCents" => $getTransaction->total_to_receiver,
+                            "userCommissionInCents" => $getTransaction->total_to_platform
+                        ],
+                        "isTest" => false
+                    ];
+                    $headers = [
+                        'x-api-token' => $getTransaction->offer->utmify_token,
+                        'Content-Type' => 'application/json'
+                    ];
+                    $utmify =Http::WithHeaders($headers)
+                        ->post(
+                            'https://api.utmify.com.br/api-credentials/order',
+                            $body
+                        );
+                    Log::info("Evento enviado ao UTMIFY ", ["Response" => $utmify]);
+                 } catch (\Exception $e) {
+                    Log::error("Erro ao enviar Request para UTMIFY", ["erro" => $e->getMessage()]);
+                }
+            }
+
+
 
             event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
         } else {
