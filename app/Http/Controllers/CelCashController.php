@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PixelEvent;
 use App\ExternalApis\CelCash\CnpjUsersRequests;
 use App\ExternalApis\CelCash\CpfUsersRequests;
 use App\Http\Helpers\Responses;
@@ -14,6 +15,7 @@ use App\Models\CelcashPayments;
 use App\Models\CelcashPaymentsGatewayData;
 use App\Models\CelcashPaymentsOffers;
 use App\Models\CelcashPaymentsPixData;
+use App\Models\OfferPixel;
 use App\Models\pendingPixelEvents;
 use App\Models\ProductOffering;
 use App\Models\User;
@@ -328,7 +330,7 @@ class CelCashController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($getPrincipalOffer, $pixReference, $generatePayment, $totalPrice, $calculateTax, $formatedPayday, $validatedData, $offersData, $adquirerName, $unicId) {
+            DB::transaction(function () use ($request, $getPrincipalOffer, $pixReference, $generatePayment, $totalPrice, $calculateTax, $formatedPayday, $validatedData, $offersData, $adquirerName, $unicId) {
                 $createCelcashPayments = CelcashPayments::create([
                     'receiver_user_id' => $getPrincipalOffer->product->user->id,
                     'buyer_user_id' => null,
@@ -350,15 +352,28 @@ class CelCashController extends Controller
                     'status' => 'pending_pix',
                     'adquirer' => $adquirerName,
                 ]);
-                if (isset($validatedData['pixel_data'])) {
-                    PendingPixelEvents::create([
-                        'product_offering_id' => $getPrincipalOffer->id,
-                        'payment_id' => $createCelcashPayments->galax_pay_id,
-                        'event_name' => 'Purchase',
-                        'payload' => json_encode($validatedData['pixel_data']),
-                        'status' => 'Waiting Payment'
-                    ]);
+
+              $offerPixels = OfferPixel::where('product_offering_id', $getPrincipalOffer->id)
+                    ->where('send_on_generate_payment', true)
+                    ->get();
+                Log::info("Validando os pixel para ser enviado agora ao gerar pagamento", ["pixel" => $offerPixels]);
+                if($offerPixels->isEmpty()) { //valido se estiver vazio pois significa que nenhum pixel cadastro para a oferta é para disparar antes do pagamento
+                    Log::info("Pixel a ser disparado na confirmacão do pagamento", ["pixel" => $offerPixels]);
+                    if (isset($validatedData['pixel_data'])) {
+                        PendingPixelEvents::create([
+                            'product_offering_id' => $getPrincipalOffer->id,
+                            'payment_id' => $createCelcashPayments->galax_pay_id,
+                            'event_name' => 'Purchase',
+                            'payload' => json_encode($validatedData['pixel_data']),
+                            'status' => 'Waiting Payment'
+                        ]); // salvo na tabela o evento do pixel para disparar após a confirmacao do pagamento
+                    }
+                }else{
+                    Log::info("Colocando na fila o evento para disparar o pixel", ["pixel" => $offerPixels]);
+                    event(new PixelEvent($getPrincipalOffer->id, 'Purchase', $validatedData['pixel_data'], $request->header('x-transaction-id')));
                 }
+
+
 
                 if ($adquirerName == 'reflow') {
                     $createPixDetails = CelcashPaymentsPixData::create([

@@ -323,14 +323,13 @@ class CelcashWebhooksController extends Controller
              */
             $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['orderId'])
                 ->where('status', 'Waiting Payment')
-                ->with('offerPixels')
                 ->get();
 
             if ($pendingEvents->isNotEmpty() ) {
                 foreach ($pendingEvents as $event) {
                     try {
                         // Envia evento de conversão
-                        event(new PixelEvent($event->offerPixels->pixel, $event->event_name, $event->payload, $request->header('x-transaction-id')));
+                        event(new PixelEvent($event->offer_id, $event->event_name, $event->payload, $request->header('x-transaction-id')));
                         // Marca o evento como enviado
                         $event->update(['status' => 'sent']);
                     } catch (\Exception $e) {
