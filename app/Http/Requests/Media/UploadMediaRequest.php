@@ -23,6 +23,16 @@ class UploadMediaRequest extends FormRequest
 
     public function failedValidation(Validator $validator) {
 
+        if (!$this->hasFile('file')) {
+            \Log::debug('Falha na Validação - Arquivo não encontrado na requisição.', ["objeto recebido no request" =>  $this->all()]);
+        } else {
+            \Log::debug(' Validação - Arquivo encontrado na requisição:', [
+                'original_name' => $this->file('file')->getClientOriginalName(),
+                'size' => $this->file('file')->getSize(),
+                'mime_type' => $this->file('file')->getMimeType(),
+            ]);
+        }
+
         throw new HttpResponseException(Responses::ERROR('Campos obrigatórios não preenchidos ou inválidos', $validator->errors(), '-1000', 400));
 
     }
