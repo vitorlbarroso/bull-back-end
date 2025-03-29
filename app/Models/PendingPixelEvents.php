@@ -7,8 +7,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PendingPixelEvents extends Model
 {
+
+    protected $fillable = [
+        'product_offering_id',
+        'payment_id',
+        'event_name',
+        'payload',
+        'status',
+    ];
     protected $casts = [
         'payload' => 'array',
+
     ];
 
     public function productsOffering(): BelongsTo
