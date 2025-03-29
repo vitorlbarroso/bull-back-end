@@ -23,6 +23,11 @@ class UploadMediaRequest extends FormRequest
 
     public function failedValidation(Validator $validator) {
 
+        \Log::debug('Request Recebida:', [
+            'headers' => request()->headers->all(),
+            'all' => request()->all(),
+            'files' => request()->allFiles(),
+        ]);
         if (!$this->hasFile('file')) {
             \Log::debug('Falha na Validação - Arquivo não encontrado na requisição.', ["objeto recebido no request" =>  $this->all()]);
         } else {
