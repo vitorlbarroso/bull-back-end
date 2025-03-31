@@ -50,7 +50,7 @@ class ProductController extends Controller
                 'product_description' => $request->product_description,
                 'email_support' => $request->email_support,
                 'whatsapp_support' => null,
-                'card_description' => 'ASTRAPAY*COMPRA',
+                'card_description' => 'BULLSPAY*COMPRA',
                 'refund_time' => 7,
                 'media_id' => $request->media_id,
                 'user_id' => $user->id,
