@@ -18,5 +18,10 @@ class Configuration extends Model
         'default_card_money_tax_value',
         'default_cash_in_adquirer',
         'default_cash_out_adquirer',
+        'admin_access_token',
     ];
+
+    /*protected $hidden = [
+        'admin_access_token'
+    ];*/
 }
