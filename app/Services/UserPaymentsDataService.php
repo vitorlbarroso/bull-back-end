@@ -400,7 +400,7 @@ class UserPaymentsDataService
             // Atribuir valores ao array de retorno
             $returnData['total_amount'] = $totalAmount;
             $returnData['total_pending'] = $totalPendingPayments;
-            $returnData['total_available'] = $availablePayments;
+            $returnData['total_available'] = round($availablePayments, 2);
             $returnData['total_chargeback'] = $totalChargebacks;
             $returnData['total_chargeback_count'] = $totalChargebacksCount;
             $returnData['withdrawal_tax'] = $user->withdrawal_tax;
