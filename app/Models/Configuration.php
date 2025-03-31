@@ -21,7 +21,7 @@ class Configuration extends Model
         'admin_access_token',
     ];
 
-    /*protected $hidden = [
+    protected $hidden = [
         'admin_access_token'
-    ];*/
+    ];
 }
