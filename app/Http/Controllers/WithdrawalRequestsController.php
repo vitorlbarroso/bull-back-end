@@ -58,7 +58,7 @@ class WithdrawalRequestsController extends Controller
 
         $getTotalAuthorizedWithdrawal = UserPaymentsDataService::getWithdrawalData();
 
-        if (($getTotalAuthorizedWithdrawal['total_available'] * 100) < $validated['amount']) {
+        if (($getTotalAuthorizedWithdrawal['total_available'] * 100) <= $validated['amount']) {
             return Responses::ERROR('O valor solicitado é maior que o disponível para saque!', $getTotalAuthorizedWithdrawal['total_available'], 1300, 400);
         }
 
