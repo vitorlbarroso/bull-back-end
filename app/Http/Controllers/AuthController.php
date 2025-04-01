@@ -75,39 +75,16 @@ class AuthController extends Controller
         try {
             $configsData = Configuration::first();
 
-            if ($configsData) {
-                if ($configsData->default_withdraw_period) {
-                    $data['withdrawal_period'] = $configsData->default_withdraw_period;
-                }
+            $data['withdrawal_period'] = $configsData->default_withdraw_period ?? 0;
+            $data['withdrawal_tax'] = $configsData->default_withdraw_tax ?? 1.5;
+            $data['pix_tax_value'] = $configsData->default_pix_tax_value ?? 1.99;
+            $data['pix_money_tax_value'] = $configsData->default_pix_money_tax_value ?? 1.3;
+            $data['card_tax_value'] = $configsData->default_card_tax_value ?? 4.99;
+            $data['card_money_tax_value'] = $configsData->default_card_money_tax_value ?? 1.5;
+            $data['cash_in_adquirer_name'] = $configsData->default_cash_in_adquirer ?? 'zendry';
+            $data['cash_out_adquirer_name'] = $configsData->default_cash_out_adquirer ?? 'zendry';
 
-                if ($configsData->default_withdraw_tax) {
-                    $data['withdrawal_tax'] = $configsData->default_withdraw_tax;
-                }
-
-                if ($configsData->default_pix_tax_value) {
-                    $data['pix_tax_value'] = $configsData->default_pix_tax_value;
-                }
-
-                if ($configsData->default_pix_money_tax_value) {
-                    $data['pix_money_tax_value'] = $configsData->default_pix_money_tax_value;
-                }
-
-                if ($configsData->default_card_tax_value) {
-                    $data['card_tax_value'] = $configsData->default_card_tax_value;
-                }
-
-                if ($configsData->default_card_money_tax_value) {
-                    $data['card_money_tax_value'] = $configsData->default_card_money_tax_value;
-                }
-
-                if ($configsData->default_cash_in_adquirer) {
-                    $data['cash_in_adquirer_name'] = $configsData->default_cash_in_adquirer;
-                }
-
-                if ($configsData->default_cash_out_adquirer) {
-                    $data['cash_out_adquirer_name'] = $configsData->default_cash_out_adquirer;
-                }
-            }
+            Log::info("| CRIÇÃO DE CONTA ".'| Criando conta de usuário', ['Dados da criação do usuário' => $data]);
 
             $createUser = User::create($data);
 
