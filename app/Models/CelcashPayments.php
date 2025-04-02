@@ -34,6 +34,13 @@ class CelcashPayments extends Model
         'buyer_city',
         'buyer_number',
         'buyer_complement',
+        'src',
+        'sck',
+        'utm_source',
+        'utm_campaign',
+        'utm_medium',
+        'utm_content',
+        'utm_term',
     ];
 
     public function receiver_user_id() : BelongsTo
