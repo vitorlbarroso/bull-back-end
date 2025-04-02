@@ -250,13 +250,13 @@ class CelcashWebhooksController extends Controller
                             ]
                         ],
                         "trackingParameters" => [
-                            "src" => null,
-                            "sck"=> null,
-                            "utm_source"=> null,
-                            "utm_campaign"=> null,
-                            "utm_medium"=> null,
-                            "utm_content"=> null,
-                            "utm_term"=> null
+                            "src" => $getTransaction->src,
+                            "sck"=>  $getTransaction->sck,
+                            "utm_source"=>  $getTransaction->utm_source,
+                            "utm_campaign"=> $getTransaction->utm_campaign,
+                            "utm_medium"=> $getTransaction->utm_medium,
+                            "utm_content"=> $getTransaction->utm_content,
+                            "utm_term"=> $getTransaction->utm_term,
                         ],
                         "commission" => [
                             "totalPriceInCents" => $getTransaction->total_value,
@@ -430,13 +430,13 @@ class CelcashWebhooksController extends Controller
                             ]
                         ],
                         "trackingParameters" => [
-                            "src" => null,
-                            "sck"=> null,
-                            "utm_source"=> null,
-                            "utm_campaign"=> null,
-                            "utm_medium"=> null,
-                            "utm_content"=> null,
-                            "utm_term"=> null
+                            "src" => $getTransaction->src,
+                            "sck"=>  $getTransaction->sck,
+                            "utm_source"=>  $getTransaction->utm_source,
+                            "utm_campaign"=> $getTransaction->utm_campaign,
+                            "utm_medium"=> $getTransaction->utm_medium,
+                            "utm_content"=> $getTransaction->utm_content,
+                            "utm_term"=> $getTransaction->utm_term,
                         ],
                         "commission" => [
                             "totalPriceInCents" => $getTransaction->total_value,

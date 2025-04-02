@@ -30,8 +30,7 @@ class UserRegisterRequest extends FormRequest
             'password' => [
                 'required',
                 'string',
-                'min:7',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z]).+$/', // Pelo menos uma letra maiúscula e uma minúscula
+                'min:6',
             ]
         ];
     }
@@ -45,8 +44,7 @@ class UserRegisterRequest extends FormRequest
             'email.required' => 'email é obrigatório e não foi preenchido',
             'email.email' => 'O email deve ser um email válido',
             'password.required' => 'A senha é obrigatória e não foi preenchida',
-            'password.min' => 'A senha precisa ter pelo menos 7 caracteres',
-            'password.regex' => 'A senha deve conter pelo menos uma letra maiúscula e uma minúscula.'
+            'password.min' => 'A senha precisa ter pelo menos 6 caracteres',
         ];
     }
 }

@@ -353,6 +353,13 @@ class CelCashController extends Controller
                     'buyer_complement' => $validatedData['customer_complement'] ?? null,
                     'status' => 'pending_pix',
                     'adquirer' => $adquirerName,
+                    'src' => $validatedData['tracking_parameters']['src'] ?? null,
+                    'sck' => $validatedData['tracking_parameters']['sck'] ?? null,
+                    'utm_source' => $validatedData['tracking_parameters']['utm_source'] ?? null,
+                    'utm_campaign' => $validatedData['tracking_parameters']['utm_campaign'] ?? null,
+                    'utm_medium' => $validatedData['tracking_parameters']['utm_medium'] ?? null,
+                    'utm_content' => $validatedData['tracking_parameters']['utm_content'] ?? null,
+                    'utm_term' => $validatedData['tracking_parameters']['utm_term'] ?? null,
                 ]);
 
               $offerPixels = OfferPixel::where('product_offering_id', $getPrincipalOffer->id)
@@ -411,13 +418,13 @@ class CelCashController extends Controller
                                 ]
                             ],
                             "trackingParameters" => [
-                                "src" => null,
-                                "sck"=> null,
-                                "utm_source"=> null,
-                                "utm_campaign"=> null,
-                                "utm_medium"=> null,
-                                "utm_content"=> null,
-                                "utm_term"=> null
+                                "src" => $createCelcashPayments->src,
+                                "sck"=>  $createCelcashPayments->sck,
+                                "utm_source"=>  $createCelcashPayments->utm_source,
+                                "utm_campaign"=> $createCelcashPayments->utm_campaign,
+                                "utm_medium"=> $createCelcashPayments->utm_medium,
+                                "utm_content"=> $createCelcashPayments->utm_content,
+                                "utm_term"=> $createCelcashPayments->utm_term,
                             ],
                             "commission" => [
                                 "totalPriceInCents" => $createCelcashPayments->total_value,
