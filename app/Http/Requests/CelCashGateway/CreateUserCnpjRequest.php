@@ -35,7 +35,6 @@ class CreateUserCnpjRequest extends FormRequest
             'address_neighborhood' => 'required|string',
             'address_city' => 'required|string',
             'address_state' => 'required|string',
-            'cnpj_card' => 'required_if:type_company_cnpj,mei,individualEntrepreneur|string',
             'responsible_document_cpf' => 'required|string',
             'responsible_name' => 'required|string',
             'mother_name' => 'required|string',
