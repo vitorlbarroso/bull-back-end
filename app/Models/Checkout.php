@@ -30,6 +30,8 @@ class Checkout extends Model
         'checkout_style',
         'is_active_contact_and_documents_fields',
         'is_active_address_fields',
+        'back_redirect_url',
+        'elements_color',
     ];
 
     public function offer(): BelongsTo

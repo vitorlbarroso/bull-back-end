@@ -72,7 +72,7 @@ class CheckoutService
             ])
                 ->where('checkout_hash', $hashIdentifier)
                 ->where('is_deleted', 0)
-                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style', 'is_active_contact_and_documents_fields', 'is_active_address_fields')
+                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style', 'is_active_contact_and_documents_fields', 'is_active_address_fields', 'back_redirect_url', 'elements_color')
                 ->first();
             return $this->formatCheckoutData($checkout);
         } catch (\Exception $e) {
@@ -105,6 +105,7 @@ class CheckoutService
                 'checkout_style' => $checkout->checkout_style,
                 'is_active_contact_and_documents_fields' => $checkout->is_active_contact_and_documents_fields,
                 'is_active_address_fields' => $checkout->is_active_address_fields,
+                'back_redirect_url' => $checkout->back_redirect_url,
             ],
             'initiate_checkout_pixels' => empty($initiateCheckoutPixels) ? null : $initiateCheckoutPixels,
             'purchase_pixels' => empty($PixelGeneratePayment) ? null : $PixelGeneratePayment,
@@ -146,6 +147,7 @@ class CheckoutService
             ],
             'configs' => [
                 'background_color' => $checkout->background_color,
+                'elements_color' => $checkout->elements_color,
             ],
         ];
     }
@@ -219,6 +221,8 @@ class CheckoutService
             'checkout_style' => $validatedData['checkout_style'],
             'is_active_contact_and_documents_fields' => $validatedData['is_active_contact_and_documents_fields'],
             'is_active_address_fields' => $validatedData['is_active_address_fields'],
+            'back_redirect_url' => $validatedData['back_redirect_url'],
+            'elements_color' => $validatedData['elements_color'],
             // Add other fields as necessary
         ];
 

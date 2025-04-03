@@ -35,6 +35,8 @@ class UpdatecheckoutRequest extends FormRequest
             'checkout_style' => 'integer',
             'is_active_contact_and_documents_fields' => 'boolean',
             'is_active_address_fields' => 'boolean',
+            'back_redirect_url' => 'nullable|string',
+            'elements_color' => 'nullable|string',
         ];
     }
 
