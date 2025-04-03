@@ -221,8 +221,8 @@ class CheckoutService
             'checkout_style' => $validatedData['checkout_style'],
             'is_active_contact_and_documents_fields' => $validatedData['is_active_contact_and_documents_fields'],
             'is_active_address_fields' => $validatedData['is_active_address_fields'],
-            'back_redirect_url' => $validatedData['back_redirect_url'] ?? null,
-            'elements_color' => $validatedData['elements_color'],
+            'back_redirect_url' => $validatedData['configs']['back_redirect_url'] ?? null,
+            'elements_color' => $validatedData['configs']['elements_color'],
             // Add other fields as necessary
         ];
 
