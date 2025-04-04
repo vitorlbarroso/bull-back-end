@@ -221,8 +221,8 @@ class ProductOfferingController extends Controller
             return Responses::ERROR('Oferta não localizada', null, -1100, 404);
         }
 
-        if ($request->price && $request->price < 9)
-            return Responses::ERROR('O preço deve ser maior que 9 reais', null, -1200, 400);
+        if ($request->price && $request->price < 5)
+            return Responses::ERROR('O preço deve ser maior que 5 reais', null, -1200, 400);
 
         try {
              $product_id = $getOffer->product_id;
