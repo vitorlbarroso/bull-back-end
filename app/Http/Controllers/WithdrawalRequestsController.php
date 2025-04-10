@@ -10,6 +10,8 @@ use App\Services\UserPaymentsDataService;
 use App\Services\UserService;
 use Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class WithdrawalRequestsController extends Controller
 {
@@ -79,9 +81,25 @@ class WithdrawalRequestsController extends Controller
                 'tax_value' => $user->withdrawal_tax
             ]);
 
+            if ($user->auto_withdrawal) {
+                $adminBaseUrl = env('ADMIN_BASE_URL');
+                $xApiToken = env('XATK');
+
+                $response = Http::post("{$adminBaseUrl}/system/wdal/wdal_update", [
+                    'id' => $createWithdrawalRequest->id,
+                    'x_api_token' => $xApiToken,
+                ]);
+
+                if (!$response->successful()) {
+                    throw new \Exception('Erro ao enviar solicitação automática de saque.');
+                }
+            }
+
             return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
         }
         catch (\Exception $e) {
+            Log::error('Não foi possível solicitar um saque para o usuário', ['error' => $e->getMessage()]);
+
             return Responses::ERROR('Ocorreu um erro ao solicitar o saque!', $e->getMessage(), -1100, 400);
         }
     }
