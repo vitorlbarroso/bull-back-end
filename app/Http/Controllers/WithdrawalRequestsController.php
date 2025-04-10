@@ -90,6 +90,8 @@ class WithdrawalRequestsController extends Controller
                     'x_api_token' => $xApiToken,
                 ]);
 
+                Log::info('Requisição para autowithdrawal enviada', ['response' => $response]);
+
                 if (!$response->successful()) {
                     throw new \Exception("message: Erro ao enviar solicitação automática de saque. | resposta: $response");
                 }
