@@ -11,6 +11,7 @@ use App\Mail\AccountRepproved;
 use App\Mail\Sales\BuyerMail;
 use App\Models\CelcashConfirmHashWebhook;
 use App\Models\CelcashPayments;
+use App\Models\Configuration;
 use App\Models\PendingPixelEvents;
 use App\Models\User;
 use App\Models\UserCelcashCnpjCredentials;
@@ -165,12 +166,27 @@ class CelcashWebhooksController extends Controller
             if (!$buyerUser) {
                 $generateRandomPassword = UserService::generateRandomPassword();
 
+                $data = [
+                    'name' => $getTransaction->buyer_name,
+                    'email' => $getTransaction->buyer_email,
+                    'password' => $generateRandomPassword
+                ];
+
+                $configsData = Configuration::first();
+
+                $data['withdrawal_period'] = $configsData->default_withdraw_period ?? 0;
+                $data['withdrawal_tax'] = $configsData->default_withdraw_tax ?? 1.5;
+                $data['pix_tax_value'] = $configsData->default_pix_tax_value ?? 1.99;
+                $data['pix_money_tax_value'] = $configsData->default_pix_money_tax_value ?? 1.3;
+                $data['card_tax_value'] = $configsData->default_card_tax_value ?? 4.99;
+                $data['card_money_tax_value'] = $configsData->default_card_money_tax_value ?? 1.5;
+                $data['cash_in_adquirer_name'] = $configsData->default_cash_in_adquirer ?? 'zendry';
+                $data['cash_out_adquirer_name'] = $configsData->default_cash_out_adquirer ?? 'zendry';
+
+                Log::info("| CRIÇÃO DE CONTA - COMPRADOR ".'| Criando conta de usuário comprador', ['Dados da criação do usuário' => $data]);
+
                 try {
-                    $buyerUser = User::create([
-                        'name' => $getTransaction->buyer_name,
-                        'email' => $getTransaction->buyer_email,
-                        'password' => $generateRandomPassword
-                    ]);
+                    $buyerUser = User::create($data);
                 }
                 catch (\Exception $e) {
                     \App\Models\CelcashWebhook::create([
@@ -347,12 +363,27 @@ class CelcashWebhooksController extends Controller
             if (!$buyerUser) {
                 $generateRandomPassword = UserService::generateRandomPassword();
 
+                $data = [
+                    'name' => $getTransaction->buyer_name,
+                    'email' => $getTransaction->buyer_email,
+                    'password' => $generateRandomPassword
+                ];
+
+                $configsData = Configuration::first();
+
+                $data['withdrawal_period'] = $configsData->default_withdraw_period ?? 0;
+                $data['withdrawal_tax'] = $configsData->default_withdraw_tax ?? 1.5;
+                $data['pix_tax_value'] = $configsData->default_pix_tax_value ?? 1.99;
+                $data['pix_money_tax_value'] = $configsData->default_pix_money_tax_value ?? 1.3;
+                $data['card_tax_value'] = $configsData->default_card_tax_value ?? 4.99;
+                $data['card_money_tax_value'] = $configsData->default_card_money_tax_value ?? 1.5;
+                $data['cash_in_adquirer_name'] = $configsData->default_cash_in_adquirer ?? 'zendry';
+                $data['cash_out_adquirer_name'] = $configsData->default_cash_out_adquirer ?? 'zendry';
+
+                Log::info("| CRIÇÃO DE CONTA - COMPRADOR ".'| Criando conta de usuário comprador', ['Dados da criação do usuário' => $data]);
+
                 try {
-                    $buyerUser = User::create([
-                        'name' => $getTransaction->buyer_name,
-                        'email' => $getTransaction->buyer_email,
-                        'password' => $generateRandomPassword
-                    ]);
+                    $buyerUser = User::create($data);
                 }
                 catch (\Exception $e) {
                     \App\Models\CelcashWebhook::create([
