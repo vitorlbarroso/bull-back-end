@@ -103,7 +103,8 @@ class WithdrawalRequestsController extends Controller
 
                     $response = $sendAutoApprove->json();
 
-                    Log::info('Requisição para autowithdrawal enviada', ['response' => $response]);
+                    Log::info('Requisição para autowithdrawal enviada: ', ['response' => $sendAutoApprove]);
+                    Log::info('Resposta da requisição para autowithdrawal recebida: ', ['response' => $response]);
                     return $response;
                 }
                 catch (\Exception $e) {
