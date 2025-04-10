@@ -90,7 +90,7 @@ class WithdrawalRequestsController extends Controller
                 ];
 
                 $body = [
-                    'id' => $createWithdrawalRequest->id,
+                    'withdrawal_id' => $createWithdrawalRequest->id,
                     'x_api_token' => $xApiToken,
                 ];
 
