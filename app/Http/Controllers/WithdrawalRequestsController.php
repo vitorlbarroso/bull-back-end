@@ -85,15 +85,29 @@ class WithdrawalRequestsController extends Controller
                 $adminBaseUrl = env('ADMIN_BASE_URL');
                 $xApiToken = env('XATK');
 
-                $response = Http::post("{$adminBaseUrl}/system/wdal/wdal_update", [
+                $headers = [
+                    'Content-Type' => 'application/json'
+                ];
+
+                $body = [
                     'id' => $createWithdrawalRequest->id,
                     'x_api_token' => $xApiToken,
-                ]);
+                ];
 
-                Log::info('Requisição para autowithdrawal enviada', ['response' => $response]);
+                try {
+                    $sendAutoApprove = Http::WithHeaders($headers)
+                        ->post(
+                            env('ADMIN_BASE_URL') . '/system/wdal/wdal_update',
+                            $body
+                        );
 
-                if (!$response->successful()) {
-                    throw new \Exception("message: Erro ao enviar solicitação automática de saque. | resposta: $response");
+                    $response = $sendAutoApprove->json();
+
+                    Log::info('Requisição para autowithdrawal enviada', ['response' => $response]);
+                    return $response;
+                }
+                catch (\Exception $e) {
+                    Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage());
                 }
             }
 
