@@ -91,7 +91,7 @@ class WithdrawalRequestsController extends Controller
                 ]);
 
                 if (!$response->successful()) {
-                    throw new \Exception('Erro ao enviar solicitação automática de saque.');
+                    throw new \Exception("message: Erro ao enviar solicitação automática de saque. | resposta: $response");
                 }
             }
 
