@@ -45,6 +45,7 @@ class User extends Authenticatable
         'card_money_tax_value',
         'cash_in_adquirer_name',
         'cash_out_adquirer_name',
+        'auto_withdrawal',
     ];
 
     /**
