@@ -503,6 +503,7 @@ class CelCashController extends Controller
                     'celcash_payments.payday',
                     'celcash_payments.buyer_name',
                     'celcash_payments.buyer_email',
+                    'celcash_payments.buyer_phone',
                     'celcash_payments.buyer_document_cpf',
                     'celcash_payments.created_at',
                     'celcash_payments.status',
@@ -545,7 +546,7 @@ class CelCashController extends Controller
                     })
                         ->select('id', 'celcash_payments_id', 'products_offerings_id');
                 })
-                ->select(['id', 'receiver_user_id', 'type', 'total_value', 'payday', 'buyer_name', 'buyer_email', 'buyer_document_cpf', 'status'])
+                ->select(['id', 'receiver_user_id', 'type', 'total_value', 'payday', 'buyer_name', 'buyer_email', 'buyer_phone', 'buyer_document_cpf', 'status'])
                 ->orderBy('id', 'DESC')
                 ->paginate($itemsPerPage);
 
@@ -572,6 +573,7 @@ class CelCashController extends Controller
                     'celcash_payments.payday',
                     'celcash_payments.buyer_name',
                     'celcash_payments.buyer_email',
+                    'celcash_payments.buyer_phone',
                     'celcash_payments.buyer_document_cpf',
                     'celcash_payments.created_at',
                     'celcash_payments.status',
@@ -613,6 +615,7 @@ class CelCashController extends Controller
                     'celcash_payments.payday',
                     'celcash_payments.buyer_name',
                     'celcash_payments.buyer_email',
+                    'celcash_payments.buyer_phone',
                     'celcash_payments.buyer_document_cpf',
                     'celcash_payments.created_at',
                     'celcash_payments.status',
