@@ -88,7 +88,7 @@ class ProductController extends Controller
                 ->where('user_id', $user->id)
                 ->where('is_deleted', 0)
                 ->orderByDesc('id')
-                ->paginate($itemsPerPage);
+                ->get();
 
             return Responses::SUCCESS('', $products);
         } catch (\Throwable $th) {
@@ -119,7 +119,7 @@ class ProductController extends Controller
                     $query->where('status', 1);
                 }])
                 ->orderByDesc('id')
-                ->paginate($itemsPerPage);
+                ->get();
 
             /*$offers = $this->getOrSetCache($request->header('x-transaction-id'),'user_' . $user->id . '_getOffersByProduct_'.$product_id, function () use ($user,$product_id, $itemsPerPage) {
                 return ProductOffering::whereHas('product', function ($query) use ($user, $product_id) {
