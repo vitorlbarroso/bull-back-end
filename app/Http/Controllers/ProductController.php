@@ -71,7 +71,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $itemsPerPage = $request->query('items_per_page', 10);
+        $itemsPerPage = $request->query('items_per_page', 1000000);
 
         try {
             /*$products =  $this->getOrSetCache($request->header('x-transaction-id'),'user_' . $user->id . '_getProducts_', function () use ($user, $itemsPerPage) {
@@ -88,7 +88,7 @@ class ProductController extends Controller
                 ->where('user_id', $user->id)
                 ->where('is_deleted', 0)
                 ->orderByDesc('id')
-                ->get();
+                ->paginate($itemsPerPage);
 
             return Responses::SUCCESS('', $products);
         } catch (\Throwable $th) {
@@ -119,7 +119,7 @@ class ProductController extends Controller
                     $query->where('status', 1);
                 }])
                 ->orderByDesc('id')
-                ->get();
+                ->paginate($itemsPerPage);
 
             /*$offers = $this->getOrSetCache($request->header('x-transaction-id'),'user_' . $user->id . '_getOffersByProduct_'.$product_id, function () use ($user,$product_id, $itemsPerPage) {
                 return ProductOffering::whereHas('product', function ($query) use ($user, $product_id) {
