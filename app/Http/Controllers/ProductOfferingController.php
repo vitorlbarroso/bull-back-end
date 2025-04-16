@@ -65,7 +65,7 @@ class ProductOfferingController extends Controller
                      $query->where('status', 1);
                  }])
                 ->orderBy('id', 'desc')
-                ->paginate($itemsPerPage);
+                ->get();
          }, 600); // Cache por 10 minutos (600 segundos)
         $formattedOffers = $getAllProductOfferings->through(function ($offer) {
             return $this->formatOffersWithPixels($offer);
