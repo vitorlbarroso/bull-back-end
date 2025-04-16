@@ -24,6 +24,7 @@ class CelcashPayments extends Model
         'payday',
         'buyer_name',
         'buyer_email',
+        'buyer_phone',
         'buyer_document_cpf',
         'description',
         'status',
