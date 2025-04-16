@@ -345,6 +345,7 @@ class CelCashController extends Controller
                     'payday' => $formatedPayday,
                     'buyer_name' => $validatedData['customer_name'] ?? null,
                     'buyer_email' => $validatedData['customer_email'] ?? null,
+                    'buyer_phone' => $validatedData['customer_phone'] ?? null,
                     'buyer_document_cpf' => $validatedData['customer_document'] ?? null,
                     'buyer_zipcode' => $validatedData['customer_zipcode'] ?? null,
                     'buyer_state' => $validatedData['customer_state'] ?? null,
