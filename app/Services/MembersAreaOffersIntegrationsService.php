@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+use App\Models\ProductOffering;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,20 +18,37 @@ class MembersAreaOffersIntegrationsService
             ]);
         DB::beginTransaction();
         try {
-              DB::table('members_area_offers')->insertGetId([
-                'members_area_id' => $areaMembroId,
-                'product_offering_id' => $oferta
-            ]);
+            // Verifica se já existe um registro correspondente
+            $membersAreaOfferId = DB::table('members_area_offers')
+                ->where('members_area_id', $areaMembroId)
+                ->where('product_offering_id', $oferta)
+                ->value('id');
+
+            // Se não existir, insere e obtém o ID gerado
+            if (!$membersAreaOfferId) {
+                $membersAreaOfferId = DB::table('members_area_offers')->insertGetId([
+                    'members_area_id' => $areaMembroId,
+                    'product_offering_id' => $oferta
+                ]);
+            }
+
+            $productOffering =ProductOffering::select('offer_name', 'description')
+                ->where('id', $oferta)
+                ->first();
             // Array para armazenar os módulos
             $modulesArray = [];
 
             // Percorrendo e inserindo os módulos na tabela offer_has_modules
             foreach ($modulos as $modulo) {
-                $moduleId = DB::table('offer_has_modules')->insertGetId([
-                    'modules_id' => $modulo['id'],
-                    'product_offering_id' => $oferta,
-                    'is_selected' => $modulo['is_selected'],
-                ]);
+                DB::table('members_area_offer_has_modules')->updateOrInsert(
+                    [
+                        'modules_id' => $modulo['id'],
+                        'members_area_offer_id' => $membersAreaOfferId // Agora temos certeza do ID
+                    ],
+                    [
+                        'is_selected' => $modulo['is_selected']
+                    ]
+                );
 
                 // Adicionando o módulo inserido ao array de resposta
                 $modulesArray[] = [
@@ -39,11 +57,13 @@ class MembersAreaOffersIntegrationsService
                 ];
             }
 
-                DB::commit();
+            DB::commit();
 // Estrutura final do retorno
             return [
                 'members_area_id' => $areaMembroId,
                 'product_offering_id' => $oferta,
+                'offer_name' => $productOffering->offer_name,
+                'description'=> $productOffering->description,
                 'modules' => $modulesArray,
             ];
 
@@ -89,17 +109,29 @@ class MembersAreaOffersIntegrationsService
 
         $modulesArray=[];
         DB::beginTransaction();
+        // Recuperar o members_area_offer_id
+        $membersAreaOffer = DB::table('members_area_offers')
+            ->where('product_offering_id', $product_offering_id)
+            ->where('members_area_id', $members_area_id)
+            ->first();
+
+        if (!$membersAreaOffer) {
+            DB::rollBack();
+            throw new ModelNotFoundException("Nenhuma oferta encontrada para product_offering_id: {$product_offering_id} e members_area_id: {$members_area_id}.", -1101);
+        }
+
+        $members_area_offer_id = $membersAreaOffer->id;
         foreach ($modulos as $module) {
             // Tenta encontrar o registro na tabela `offer_has_modules`
-            $existingRecord = DB::table('offer_has_modules')
-                ->where('product_offering_id', $product_offering_id)
+            $existingRecord = DB::table('members_area_offer_has_modules')
+                ->where('members_area_offer_id', $members_area_offer_id)
                 ->where('modules_id', $module['id'])
                 ->first();
 
             if ($existingRecord) {
                 // Se o registro existe, faz o update
-               DB::table('offer_has_modules')
-                    ->where('product_offering_id', $product_offering_id)
+                DB::table('members_area_offer_has_modules')
+                    ->where('members_area_offer_id', $members_area_offer_id)
                     ->where('modules_id', $module['id'])
                     ->update([
                         'is_selected' => $module['is_selected'],
@@ -112,7 +144,7 @@ class MembersAreaOffersIntegrationsService
 
             } else {
                 DB::rollBack();
-                throw new ModelNotFoundException("A relação entre o módulo ID {$module['id']} e a oferta ID {$product_offering_id} não foi encontrada.", -1100);
+                throw new ModelNotFoundException("A relação entre o módulo ID {$module['id']} e a oferta ID {$members_area_offer_id} não foi encontrada.", -1100);
             }
         }
         DB::commit();

@@ -8,6 +8,7 @@ use App\Http\Requests\MembersAreaOffersIntegrations\MembersAreaOffersIntegration
 use App\Http\Requests\MembersAreaOffersRequest;
 use App\Models\MembersAreaOffers;
 use App\Services\MembersAreaOffersIntegrationsService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -50,19 +51,26 @@ class MembersAreaOffersIntegrationsController extends Controller
         $result = DB::table('members_area_offers')
             ->join('products_offerings', 'members_area_offers.product_offering_id', '=', 'products_offerings.id')
             ->join('members_area', 'members_area.id', '=', 'members_area_offers.members_area_id')
-            ->join('offer_has_modules', 'members_area_offers.product_offering_id', '=', 'offer_has_modules.product_offering_id')
-            ->join('modules', 'offer_has_modules.modules_id', '=', 'modules.id')
+            ->join('members_area_offer_has_modules', 'members_area_offers.id', '=', 'members_area_offer_has_modules.members_area_offer_id')
+            ->join('modules', 'members_area_offer_has_modules.modules_id', '=', 'modules.id')
             ->where('members_area.id', $membersAreaOfferId)
             ->where('members_area.user_id', $userId)
             ->where('members_area_offers.is_deleted', '=', FALSE)
-            ->where('offer_has_modules.is_deleted', '=', FALSE)
+            ->where('members_area_offer_has_modules.is_deleted', '=', FALSE)
             ->select(
                 'products_offerings.offer_name',
                 'products_offerings.id as product_offering_id',
                 'products_offerings.description',
                 'modules.module_name',
                 'modules.id as module_id', // Adicionando o ID do módulo
-                'offer_has_modules.is_selected'
+                DB::raw('MAX(members_area_offer_has_modules.is_selected) as is_selected')
+            )
+            ->groupBy(
+                'products_offerings.offer_name',
+                'products_offerings.id',
+                'products_offerings.description',
+                'modules.module_name',
+                'modules.id'
             )
             ->get();
 
@@ -74,10 +82,11 @@ class MembersAreaOffersIntegrationsController extends Controller
     {
         $ofertas = $request->input('product_offering_id');
         $modulos = $request->input('modules');
+        $members_area_id = $request->input('members_area_id');
 
         try {
             // Chama o Service para processar as inserções
-            $response = $this->memberAreaService->UpdateModulesToOfferIntegration( $ofertas, $modulos, $request->header('x-transaction-id'));
+            $response = $this->memberAreaService->UpdateModulesToOfferIntegration( $ofertas, $modulos, $members_area_id, $request->header('x-transaction-id'));
             return Responses::SUCCESS('Integração Atualizada com sucesso ', $response, 201);
 
         } catch (\Throwable $e) {
@@ -104,29 +113,29 @@ class MembersAreaOffersIntegrationsController extends Controller
 
         try {
             DB::beginTransaction();
-
-            MembersAreaOffers::where('members_area_id', $membership)
+            $membersAreaOffer = DB::table('members_area_offers')
                 ->where('product_offering_id', $offerid)
-                ->join('members_area', 'members_area.id', '=', 'members_area_offers.members_area_id')
-                ->where('members_area.user_id', Auth::id())
-                ->update(['members_area_offers.is_deleted' => true]);
+                ->where('members_area_id', $membership)
+                ->first();
 
+            if (!$membersAreaOffer) {
+                DB::rollBack();
+                throw new ModelNotFoundException("Nenhuma oferta encontrada para product_offering_id: {$offerid} e members_area_id: {$membership}.", -1101);
+            }
+
+            $members_area_offer_id = $membersAreaOffer->id; // id 44 members_area_offers
+
+            MembersAreaOffers::where('id', $members_area_offer_id)
+                //->update(['members_area_offers.is_deleted' => true]);
+                ->delete();
             Log::info('|' . $request->header('x-transaction-id') ."|Remoção da integração da tabela members_area_offers realizada com sucesso, seguindo para remoção da tabela offer_has_modules");
 
-            $moduleIds = DB::table('modules as m')
-                ->join('members_area as ma', 'ma.id', '=', 'm.members_area_id')
-                ->join('members_area_offers as mao', 'mao.members_area_id', '=', 'ma.id')
-                ->where('ma.id', $membership)
-                ->where('mao.product_offering_id', $offerid)
-                ->pluck('m.id');// 2. Atualizar a tabela `offer_has_modules` onde `modules_id` está na lista de IDs obtidos
-            Log::info('|' . $request->header('x-transaction-id') ."|Módulos obtidos dessa area de membros para serem removidos da integração ${moduleIds} e a oferta ${offerid}");
-
-            DB::table('offer_has_modules')
-                ->whereIn('modules_id', $moduleIds)
-                ->where('product_offering_id', $offerid)
-                ->update(['is_deleted' => true]);
+            DB::table('members_area_offer_has_modules')
+                ->where('members_area_offer_id', $members_area_offer_id)
+                //->update(['is_deleted' => true]);
+                ->delete();
             DB::commit();
-            return Responses::SUCCESS('Remoção da Integração realizada com sucesso ', [$membership, $moduleIds], 201);
+            return Responses::SUCCESS('Remoção da Integração realizada com sucesso ', [$membership, $membersAreaOffer], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -19,6 +19,7 @@ class Lesson extends Model
         'is_deleted',
         'default_release_lesson',
         'custom_release_date',
+        'order',
     ];
 
     protected $casts = [
@@ -32,9 +33,11 @@ class Lesson extends Model
 
     protected static function booted()
     {
-        static::creating(function ($module) {
-            $module->is_active = $module->is_active ?? true;    // Valor padrão para is_active
-            $module->is_deleted = $module->is_deleted ?? false;  // Valor padrão para is_deleted
+        static::creating(function ($lesson) {
+            $lesson->is_active = $lesson->is_active ?? true;    // Valor padrão para is_active
+            $lesson->is_deleted = $lesson->is_deleted ?? false;  // Valor padrão para is_deleted
+            $lastOrder = Lesson::where('modules_id', $lesson->modules_id)->max('order') ?? 0;
+            $lesson->order = $lastOrder + 1;
         });
     }
 
