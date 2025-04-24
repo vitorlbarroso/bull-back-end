@@ -37,6 +37,10 @@ class UpdatecheckoutRequest extends FormRequest
             'is_active_address_fields' => 'boolean',
             'configs.back_redirect_url' => 'nullable|string',
             'configs.elements_color' => 'nullable|string',
+            'text.text' => 'nullable|string',
+            'text.text_display' => 'boolean',
+            'text.text_font_color' => 'string',
+            'text.text_bg_color' => 'string',
         ];
     }
 

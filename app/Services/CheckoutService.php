@@ -72,7 +72,7 @@ class CheckoutService
             ])
                 ->where('checkout_hash', $hashIdentifier)
                 ->where('is_deleted', 0)
-                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style', 'is_active_contact_and_documents_fields', 'is_active_address_fields', 'back_redirect_url', 'elements_color')
+                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style', 'is_active_contact_and_documents_fields', 'is_active_address_fields', 'back_redirect_url', 'elements_color', 'text', 'text_display', 'text_font_color', 'text_bg_color')
                 ->first();
             return $this->formatCheckoutData($checkout);
         } catch (\Exception $e) {
@@ -149,6 +149,12 @@ class CheckoutService
                 'elements_color' => $checkout->elements_color,
                 'back_redirect_url' => $checkout->back_redirect_url,
             ],
+            'text' => [
+                'text' => $checkout->text,
+                'text_font_color' => $checkout->text_font_color,
+                'text_bg_color' => $checkout->text_bg_color,
+                'text_display' => $checkout->text_display,
+            ]
         ];
     }
 
@@ -223,6 +229,10 @@ class CheckoutService
             'is_active_address_fields' => $validatedData['is_active_address_fields'],
             'back_redirect_url' => $validatedData['configs']['back_redirect_url'] ?? null,
             'elements_color' => $validatedData['configs']['elements_color'],
+            'text' => $validatedData['text']['text'],
+            'text_display' => $validatedData['text']['text_display'],
+            'text_font_color' => $validatedData['text']['text_font_color'],
+            'text_bg_color' => $validatedData['text']['text_bg_color'],
             // Add other fields as necessary
         ];
 
