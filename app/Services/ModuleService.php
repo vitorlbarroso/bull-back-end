@@ -140,7 +140,8 @@ class ModuleService
             ->leftJoin('members_area AS ma', 'mo.members_area_id', '=', 'ma.id')
             ->where('mo.is_blocked', '=', 0)
             ->where('m.upload_status', '=', 'complete')
-            ->where('ma.user_id', '=', $userId);
+            ->where('ma.user_id', '=', $userId)
+            ->orderBy('l.order', 'asc'); // Adicionando o ORDER BY aqui
 
 // Verifica se o módulo ID foi fornecido e aplica a condição
         if (!is_null($modules_id)) {
