@@ -69,7 +69,7 @@ Route::prefix('checkouts')->group(function() {
         Route::post('/add_review', [CheckoutController::class, 'add_review']);
         Route::put('/{id}', [CheckoutController::class, 'update']);
         Route::put('/active_checkout/{checkout_id}', [CheckoutController::class, 'active_checkout']);
-        Route::delete('/remove_review', [CheckoutController::class, 'remove_review']);
+        Route::delete('/remove_review/{reviewId}', [CheckoutController::class, 'remove_review']);
         Route::delete('/{id}', [CheckoutController::class, 'destroy']);
     });
 });

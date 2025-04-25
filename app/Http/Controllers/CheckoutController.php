@@ -54,15 +54,11 @@ class CheckoutController extends Controller
         return Responses::SUCCESS('Avaliação criada com sucesso', $created);
     }
 
-    public function remove_review(Request $request)
+    public function remove_review($reviewId)
     {
-        $validated = $request->validate([
-            'review_id' => 'required',
-        ]);
-
         $user = Auth::user();
 
-        $getReview = CheckoutReviews::where('id', $validated['review_id'])
+        $getReview = CheckoutReviews::where('id', $reviewId)
             ->first();
 
         if (!$getReview) {
