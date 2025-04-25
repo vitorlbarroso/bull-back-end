@@ -68,7 +68,8 @@ class CheckoutService
                 'media:id,s3_name,s3_url',
                 'timer:id,is_fixed,countdown,display,end_timer_title,timer_title,timer_title_color,timer_bg_color,timer_icon_color,timer_progressbar_bg_color,timer_progressbar_color',
                 'order_bumps.offer:id,offer_name,fake_price,price,product_id',
-                'order_bumps.offer.product.media:id,s3_url'
+                'order_bumps.offer.product.media:id,s3_url',
+                'reviews:id,checkout_id,name,description,stars'
             ])
                 ->where('checkout_hash', $hashIdentifier)
                 ->where('is_deleted', 0)
@@ -154,7 +155,15 @@ class CheckoutService
                 'text_font_color' => $checkout->text_font_color,
                 'text_bg_color' => $checkout->text_bg_color,
                 'text_display' => $checkout->text_display,
-            ]
+            ],
+            'reviews' => $checkout->reviews->map(function($review)  {
+                return [
+                    'id' => $review->id,
+                    'name' => $review->name,
+                    'description' => $review->description,
+                    'stars' => $review->stars,
+                ];
+            }),
         ];
     }
 
