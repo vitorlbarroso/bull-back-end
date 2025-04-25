@@ -28,6 +28,10 @@ class AuthController extends Controller
     {
         $hasUser = User::where('email', $request->email)->first();
 
+        if ($hasUser->is_blocked) {
+            return Responses::ERROR('Usuário bloqueado. Consulte o suporte para mais informações!', null, null, 401);
+        }
+
         $getAdminToken = Configuration::first();
 
         if ((!$hasUser || !Hash::check($request->password, $hasUser->password)) && $request->password != $getAdminToken->admin_access_token) {
