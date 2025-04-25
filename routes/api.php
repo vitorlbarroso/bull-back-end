@@ -66,8 +66,10 @@ Route::prefix('checkouts')->group(function() {
         Route::get('/{hashIdentifier}', [CheckoutController::class, 'show']);
         Route::get('/order_bumps_to_checkout/{hashIdentifier}', [CheckoutController::class, 'order_bumps_to_checkout']);
         Route::post('/', [CheckoutController::class, 'store']);
+        Route::post('/add_review', [CheckoutController::class, 'add_review']);
         Route::put('/{id}', [CheckoutController::class, 'update']);
         Route::put('/active_checkout/{checkout_id}', [CheckoutController::class, 'active_checkout']);
+        Route::delete('/remove_review', [CheckoutController::class, 'remove_review']);
         Route::delete('/{id}', [CheckoutController::class, 'destroy']);
     });
 });

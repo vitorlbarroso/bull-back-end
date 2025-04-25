@@ -7,9 +7,11 @@ use App\Http\Requests\Checkout\CheckoutRequest;
 use App\Http\Requests\Checkout\UpdatecheckoutRequest;
 use App\Models\CelcashPayments;
 use App\Models\Checkout;
+use App\Models\CheckoutReviews;
 use App\Models\OfferPixel;
 use App\Models\ProductOffering;
 use App\Services\CheckoutService;
+use Bref\LaravelHealthCheck\Check;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -28,6 +30,54 @@ class CheckoutController extends Controller
     public function __construct(CheckoutService $checkoutService)
     {
         $this->checkoutService = $checkoutService;
+    }
+
+    public function add_review(Request $request)
+    {
+        $validated = $request->validate([
+            'checkout_id' => 'required',
+            'name' => 'required|string',
+            'description' => 'nullable|string',
+            'stars' => 'required|integer',
+        ]);
+
+        $user = Auth::user();
+
+        $checkout = $this->checkoutService->handleCheckoutRequest($validated['checkout_id'], Auth::id(), 'edit');
+
+        if (!$checkout) {
+            return Responses::ERROR('Checkout não encontrado ou bloqueado!', null, 1100);
+        }
+
+        $created = CheckoutReviews::create($validated);
+
+        return Responses::SUCCESS('Avaliação criada com sucesso', $created);
+    }
+
+    public function remove_review(Request $request)
+    {
+        $validated = $request->validate([
+            'review_id' => 'required',
+        ]);
+
+        $user = Auth::user();
+
+        $getReview = CheckoutReviews::where('id', $validated['review_id'])
+            ->first();
+
+        if (!$getReview) {
+            return Responses::ERROR('Checkout não encontrado ou bloqueado!', null, 1100);
+        }
+
+        $checkout = $this->checkoutService->handleCheckoutRequest($getReview->checkout_id, Auth::id(), 'edit');
+
+        if (!$checkout) {
+            return Responses::ERROR('Checkout não encontrado ou bloqueado!', null, 1200);
+        }
+
+        $removed = $getReview->delete();
+
+        return Responses::SUCCESS('Avaliação removida com sucesso!');
     }
 
     public function store(CheckoutRequest $request)
@@ -205,7 +255,7 @@ class CheckoutController extends Controller
                 })
                 ->where('checkout_hash', $checkoutHash)
                 ->where('is_deleted', 0)
-                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style', 'is_active_contact_and_documents_fields', 'is_active_address_fields', 'back_redirect_url', 'elements_color')
+                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style', 'is_active_contact_and_documents_fields', 'is_active_address_fields', 'back_redirect_url', 'elements_color', 'text', 'text_display', 'text_font_color', 'text_bg_color')
                 ->first();
 
             if (!$getCheckout) {

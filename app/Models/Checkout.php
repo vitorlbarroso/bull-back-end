@@ -62,4 +62,9 @@ class Checkout extends Model
     {
         return (bool) $value;
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(CheckoutReviews::class);
+    }
 }
