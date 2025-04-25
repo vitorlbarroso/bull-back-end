@@ -24,7 +24,7 @@ class MediaController extends Controller
         try {
             $file = $request->file('file');
             $transactionId = $request->header('x-transaction-id');
-            $data = $this->mediaService->uploadAndStoreMedia($file, $transactionId);
+            $data = $this->mediaService->uploadAndStoreMedia($file, $transactionId, $request);
             return Responses::SUCCESS('Media inserida no S3 com sucesso!', $data, 201);
         } catch (\Exception $e) {
             return Responses::ERROR('Não foi possível processar a solicitação', $e->getMessage(), '-9999', 500);
