@@ -513,13 +513,13 @@ class CelcashWebhooksController extends Controller
         ]);*/
 
         $validatedData = $request->validate([
-            'transactionId' => 'required',
-            'status' => 'required',
-            'endToEndId' => 'required',
-            'amount' => 'required'
+            'data.transactionId' => 'required',
+            'data.status' => 'required',
+            'data.endToEndId' => 'required',
+            'data.amount' => 'required'
         ]);
 
-        $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['transactionId'])
+        $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['data']['transactionId'])
             ->with('payment_offers', function($query) {
                 $query->where('type', 'principal')
                     ->with('offer', function($query) {
@@ -538,14 +538,14 @@ class CelcashWebhooksController extends Controller
 
         if ($getTransaction->type == 'pix') {
             if (
-                $validatedData['status'] == 'paid'
+                $validatedData['data']['status'] == 'paid'
             ) {
                 $status = 'payed_pix';
                 $isPayedStatus = true;
             }
 
             if (
-                $validatedData['status'] == 'awaiting_payment'
+                $validatedData['data']['status'] == 'awaiting_payment'
             ) {
                 $status = 'pending_pix';
                 $isPayedStatus = false;
@@ -583,7 +583,7 @@ class CelcashWebhooksController extends Controller
                 catch (\Exception $e) {
                     \App\Models\CelcashWebhook::create([
                         'webhook_title' => 'ERRO AO CRIAR USUÁRIO PAGANTE',
-                        'webhook_id' => $validatedData['transactionId'],
+                        'webhook_id' => $validatedData['data']['transactionId'],
                         'webhook_event' => $validatedData,
                         'webhook_data' => $request,
                     ]);
@@ -596,7 +596,7 @@ class CelcashWebhooksController extends Controller
             ]);
 
             try {
-                Mail::to($buyerUser->email)->send(new BuyerMail($buyerUser->name, $buyerUser->email, $getTransaction->payment_offers[0]->offer->product->email_support, $validatedData['transactionId']));
+                Mail::to($buyerUser->email)->send(new BuyerMail($buyerUser->name, $buyerUser->email, $getTransaction->payment_offers[0]->offer->product->email_support, $validatedData['data']['transactionId']));
             }
             catch (\Exception $e) {
                 Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao tentar enviar um e-mail de pagamento |', [ 'ERRO' => $e->getMessage()]);
@@ -608,7 +608,7 @@ class CelcashWebhooksController extends Controller
              * E INICIA AS AULAS COM O PROGRESSO ZERADO
              * =============================================================
              */
-            $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['transactionId'])
+            $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['data']['transactionId'])
                 ->where('status', 'Waiting Payment')
                 ->get();
 
@@ -630,7 +630,7 @@ class CelcashWebhooksController extends Controller
             if($getTransaction->payment_offers[0]->offer->utmify_token) {
                 try {
                     $body = [
-                        "orderId" => $validatedData['transactionId'],
+                        "orderId" => $validatedData['data']['transactionId'],
                         "platform" => "BullsPay",
                         "paymentMethod" => "pix",
                         "status" => "paid",
