@@ -150,6 +150,9 @@ Route::prefix('webhooks')->group(function() {
     Route::prefix('zendry')->group(function() {
         Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_zendry']);
     });
+    Route::prefix('venit')->group(function() {
+        Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_venit']);
+    });
 });
 
 Route::prefix('pixel')->middleware('auth:sanctum')->group(function() {

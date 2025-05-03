@@ -501,4 +501,199 @@ class CelcashWebhooksController extends Controller
 
         return Responses::SUCCESS('Status do transação atualizado com sucesso!', null, 200);
     }
+
+    public function transactions_venit(Request $request)
+    {
+        /*$validatedData = $request->validate([
+            'message' => 'required',
+            'message.reference_code' => 'required',
+            'message.status' => 'required',
+            'message.end_to_end' => 'required',
+            'message.value_cents' => 'required'
+        ]);*/
+
+        $validatedData = $request->validate([
+            'transactionId' => 'required',
+            'status' => 'required',
+            'endToEndId' => 'required',
+            'amount' => 'required'
+        ]);
+
+        $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['transactionId'])
+            ->with('payment_offers', function($query) {
+                $query->where('type', 'principal')
+                    ->with('offer', function($query) {
+                        $query->with('product:id,email_support,product_name')
+                            ->select(['id', 'product_id', 'utmify_token']);
+                    })
+                    ->select(['id', 'celcash_payments_id', 'products_offerings_id', 'type']);
+            })
+            ->first();
+
+        if (!$getTransaction) {
+            return Responses::ERROR('Transação não localizada!', null, 1300, 400);
+        }
+
+        $isPayedStatus = false;
+
+        if ($getTransaction->type == 'pix') {
+            if (
+                $validatedData['status'] == 'paid'
+            ) {
+                $status = 'payed_pix';
+                $isPayedStatus = true;
+            }
+
+            if (
+                $validatedData['status'] == 'awaiting_payment'
+            ) {
+                $status = 'pending_pix';
+                $isPayedStatus = false;
+            }
+        }
+
+        if ($isPayedStatus) {
+            $buyerUser = User::where('email', $getTransaction->buyer_email)->first();
+
+            if (!$buyerUser) {
+                $generateRandomPassword = UserService::generateRandomPassword();
+
+                $data = [
+                    'name' => $getTransaction->buyer_name,
+                    'email' => $getTransaction->buyer_email,
+                    'password' => $generateRandomPassword
+                ];
+
+                $configsData = Configuration::first();
+
+                $data['withdrawal_period'] = $configsData->default_withdraw_period ?? 0;
+                $data['withdrawal_tax'] = $configsData->default_withdraw_tax ?? 1.5;
+                $data['pix_tax_value'] = $configsData->default_pix_tax_value ?? 1.99;
+                $data['pix_money_tax_value'] = $configsData->default_pix_money_tax_value ?? 1.3;
+                $data['card_tax_value'] = $configsData->default_card_tax_value ?? 4.99;
+                $data['card_money_tax_value'] = $configsData->default_card_money_tax_value ?? 1.5;
+                $data['cash_in_adquirer_name'] = $configsData->default_cash_in_adquirer ?? 'venit';
+                $data['cash_out_adquirer_name'] = $configsData->default_cash_out_adquirer ?? 'venit';
+
+                Log::info("| CRIÇÃO DE CONTA - COMPRADOR ".'| Criando conta de usuário comprador', ['Dados da criação do usuário' => $data]);
+
+                try {
+                    $buyerUser = User::create($data);
+                }
+                catch (\Exception $e) {
+                    \App\Models\CelcashWebhook::create([
+                        'webhook_title' => 'ERRO AO CRIAR USUÁRIO PAGANTE',
+                        'webhook_id' => $validatedData['transactionId'],
+                        'webhook_event' => $validatedData,
+                        'webhook_data' => $request,
+                    ]);
+                }
+            }
+
+            $getTransaction->update([
+                'status' => $status,
+                'buyer_user_id' => $buyerUser->id
+            ]);
+
+            try {
+                Mail::to($buyerUser->email)->send(new BuyerMail($buyerUser->name, $buyerUser->email, $getTransaction->payment_offers[0]->offer->product->email_support, $validatedData['transactionId']));
+            }
+            catch (\Exception $e) {
+                Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao tentar enviar um e-mail de pagamento |', [ 'ERRO' => $e->getMessage()]);
+            }
+
+            /*
+             * =============================================================
+             * DISPARA O EVENTO PARA RELACIONAR A COMPRA DA OFERTA AO USUARIO
+             * E INICIA AS AULAS COM O PROGRESSO ZERADO
+             * =============================================================
+             */
+            $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['transactionId'])
+                ->where('status', 'Waiting Payment')
+                ->get();
+
+            if($pendingEvents->isNotEmpty()  ) {
+                foreach ($pendingEvents as $event) {
+                    try {
+                        $pixel_data=PixelEventService::FormatDataPixel($event->payload);
+                        Log::info("Colocando na fila o evento para disparar o pixel Via Confirmacao de Pagamento", ["pixel" => $pixel_data]);
+                        // Envia evento de conversão
+                        event(new PixelEvent($event->offer_id, $event->event_name, $pixel_data, $request->header('x-transaction-id')));
+                        // Marca o evento como enviado
+                        $event->update(['status' => 'sent']);
+                    } catch (\Exception $e) {
+                        // Se falhar, pode logar o erro e tentar novamente depois
+                        $event->update(['status' => 'failed']);
+                    }
+                }
+            }
+            if($getTransaction->payment_offers[0]->offer->utmify_token) {
+                try {
+                    $body = [
+                        "orderId" => $validatedData['transactionId'],
+                        "platform" => "BullsPay",
+                        "paymentMethod" => "pix",
+                        "status" => "paid",
+                        "createdAt" => $getTransaction->created_at,
+                        "approvedDate" => $getTransaction->updated_at,
+                        "refundedAt" => null,
+                        "customer" => [
+                            "name" => $getTransaction->buyer_name,
+                            "email" => $getTransaction->buyer_email,
+                            "phone" => null,
+                            "document" => $getTransaction->buyer_document_cpf,
+                            "country" => "BR",
+                            "IP" =>null
+                        ],
+                        "products" =>[
+                            [
+                                "id" => $getTransaction->galax_pay_id,
+                                "name" => $getTransaction->payment_offers[0]->offer->product->product_name,
+                                "planId" => null,
+                                "planName" => null,
+                                "quantity" => 1,
+                                "priceInCents" => $getTransaction->payment_offers[0]->offer->price * 100
+                            ]
+                        ],
+                        "trackingParameters" => [
+                            "src" => $getTransaction->src,
+                            "sck"=>  $getTransaction->sck,
+                            "utm_source"=>  $getTransaction->utm_source,
+                            "utm_campaign"=> $getTransaction->utm_campaign,
+                            "utm_medium"=> $getTransaction->utm_medium,
+                            "utm_content"=> $getTransaction->utm_content,
+                            "utm_term"=> $getTransaction->utm_term,
+                        ],
+                        "commission" => [
+                            "totalPriceInCents" => $getTransaction->total_value,
+                            "gatewayFeeInCents" => $getTransaction->value_to_platform,
+                            "userCommissionInCents" => $getTransaction->value_to_receiver
+                        ],
+                        "isTest" => false
+                    ];
+                    $headers = [
+                        'x-api-token' => $getTransaction->payment_offers[0]->offer->utmify_token
+                    ];
+                    $utmify =Http::WithHeaders($headers)
+                        ->post(
+                            'https://api.utmify.com.br/api-credentials/orders',
+                            $body
+                        );
+                    Log::info("Evento enviado ao UTMIFY ", ["Response" => $utmify]);
+                } catch (\Exception $e) {
+                    Log::error("Erro ao enviar Request para UTMIFY", ["erro" => $e->getMessage()]);
+                }
+            }
+
+
+
+            event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
+        } else {
+            $getTransaction->update([
+                'status' => $status
+            ]);
+        }
+
+        return Responses::SUCCESS('Status do transação atualizado com sucesso!', null, 200);
+    }
 }
