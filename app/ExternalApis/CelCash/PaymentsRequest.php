@@ -2,6 +2,7 @@
 
 namespace App\ExternalApis\CelCash;
 
+use App\Models\VenitCredentials;
 use App\Models\ZendryTokens;
 use App\Services\CelCashService;
 use Carbon\Carbon;
@@ -114,6 +115,90 @@ class PaymentsRequest
             $response = $createPayment->json();
 
             if (isset($response['error'])) {
+                return [
+                    'error' => [
+                        'message' => "Erro ao gerar pagamento pix na adquirente",
+                        'errorMessage' => $response,
+                        'errorCode' => 1300
+                    ]
+                ];
+            }
+
+            return $response;
+        }
+        catch (\Exception $e) {
+            Log::error('Erro ao tentar gerar pagamento pix na adquirente: ' . $e->getMessage());
+
+            return [
+                'error' => [
+                    'message' => "Erro ao gerar pagamento pix na adquirente",
+                    'errorMessage' => $e->getMessage(),
+                    'errorCode' => -1100
+                ]
+            ];
+        }
+    }
+
+    static public function generatePaymentPixVenit($data, $unicId)
+    {
+
+        $credentials = VenitCredentials::first();
+
+        if (!$credentials) {
+            return [
+                'error' => [
+                    'message' => "Erro ao gerar pedido PIX na adquirente. Consultar tokens!",
+                    'errorMessage' => 'err',
+                    'errorCode' => 1100
+                ]
+            ];
+        }
+
+        $headers = [
+            'Content-Type' => 'application/json',
+            'x-public-key' => $credentials->public_key,
+            'x-secret-key' => $credentials->secret_key,
+        ];
+
+        $body = [
+            'amount' => $data['price'],
+            'postbackUrl' => 'https://api.bullspay.com.br/api/webhooks/venit/transactions',
+            "customer" => [
+                "name" => $data['customer']['name'],
+                "email" => $data['customer']['email'],
+                "phone" => "13999999999",
+                "document" => [
+                    "type" => "cpf",
+                    "number" => "00000000000"
+                ]
+            ],
+            "traceable" => false,
+            "items" => [
+                [
+                    "title" => "Produto",
+                    "unitPrice" => $data['price'],
+                    "quantity" => 1,
+                    "tangible" => false,
+                    "externalRef" => "",
+                    "product_image" => ""
+                ]
+            ],
+            "paymentMethod" => "pix",
+            "installments" => "1"
+        ];
+
+        $baseUrl = env('VENIT_BASE_URL');
+
+        try {
+            $createPayment = Http::WithHeaders($headers)
+                ->post(
+                    'https://srv.venitpay.com.br/v1/transaction',
+                    $body
+                );
+
+            $response = $createPayment->json();
+
+            if (isset($response['error']) && $response['error'] != false) {
                 return [
                     'error' => [
                         'message' => "Erro ao gerar pagamento pix na adquirente",

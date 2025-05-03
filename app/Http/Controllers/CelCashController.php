@@ -325,6 +325,25 @@ class CelCashController extends Controller
             }
         }
 
+        if ($getPrincipalOffer->product->user->cash_in_adquirer_name == 'venit') {
+            $unicId = "BP_ID_" . Str::upper(Str::random(30));
+
+            $generatePayment = CelCashService::generatePaymentPixByVenit($data, $unicId);
+
+            if (isset($generatePayment['pix'])) {
+                $unicId = $generatePayment['transactionId'];
+                $pixReference = $generatePayment['pix']['payload'];
+
+                $adquirerName = 'venit';
+
+                $returnData = [
+                    'galax_pay_id' => $generatePayment['transactionId'],
+                    'qr_code' => $generatePayment['pix']['payload'],
+                    'upsell' => $getPrincipalOffer->sale_completed_page_url
+                ];
+            }
+        }
+
         if (!empty($generatePayment['error'])) {
             $errorMessage = $generatePayment['error']['message'];
 
