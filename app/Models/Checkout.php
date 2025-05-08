@@ -20,6 +20,7 @@ class Checkout extends Model
         'background_color',
         'whatsapp_is_active',
         'whatsapp_number',
+        'fixed_values_fields',
         'exit_popup',
         'whatsapp_message',
         'banner_id',

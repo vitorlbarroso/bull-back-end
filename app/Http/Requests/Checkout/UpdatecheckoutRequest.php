@@ -35,6 +35,7 @@ class UpdatecheckoutRequest extends FormRequest
             'checkout_style' => 'integer',
             'is_active_contact_and_documents_fields' => 'boolean',
             'is_active_address_fields' => 'boolean',
+            'fixed_values_fields' => 'boolean',
             'configs.back_redirect_url' => 'nullable|string',
             'configs.elements_color' => 'nullable|string',
             'text.text' => 'nullable|string',
