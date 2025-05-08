@@ -272,7 +272,15 @@ class CelCashController extends Controller
             }
         }
 
-        $totalPrice = array_sum(array_column($offersData, 'price'));
+        if (!$request->personalized_amount) {
+            $totalPrice = array_sum(array_column($offersData, 'price'));
+        } else {
+            if (($getPrincipalOffer->price * 100) > ($request->personalized_amount * 100)) {
+                return Responses::ERROR('O valor é menor do que o permitido!', null, 1110, 400);
+            }
+
+            $totalPrice = $request->personalized_amount * 100;
+        }
 
         $calculateTax = CelCashService::calculateTax('pix', $getPrincipalOffer->product->user->id, $totalPrice);
 
@@ -282,8 +290,8 @@ class CelCashController extends Controller
 
         $data = [
             'customer' => [
-                'name' => $validatedData['customer_name'],
-                'email' => $validatedData['customer_email'],
+                'name' => $validatedData['customer_name'] ?? 'Bulls Pay',
+                'email' => $validatedData['customer_email'] ?? 'compras@bullspay.com.br',
                 'document' => [
                     'number' => $validatedData['customer_document'],
                     'type' => 'cpf'
@@ -434,7 +442,7 @@ class CelCashController extends Controller
                                     "planId" => null,
                                     "planName" => null,
                                     "quantity" => 1,
-                                    "priceInCents" => $getPrincipalOffer->price * 100
+                                    "priceInCents" => $totalPrice
                                 ]
                             ],
                             "trackingParameters" => [

@@ -26,6 +26,7 @@ class GeneratePaymentPixRequest extends FormRequest
             'orderbumps' => 'array',
             'orderbumps.*.id' => 'required|integer',
             'customer_name' => 'string',
+            'personalized_amount' => 'numeric',
             'customer_document' => 'nullable|string',
             'customer_email' => 'string',
             'customer_phone' => 'nullable|string',
