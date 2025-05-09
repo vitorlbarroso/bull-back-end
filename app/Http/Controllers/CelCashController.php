@@ -428,8 +428,8 @@ class CelCashController extends Controller
                             "approvedDate" => $createCelcashPayments->updated_at,
                             "refundedAt" => null,
                             "customer" => [
-                                "name" => $validatedData['customer_name'],
-                                "email" => $validatedData['customer_email'],
+                                "name" => $validatedData['customer_name'] ?? 'Bulls Pay',
+                                "email" => $validatedData['customer_email'] ?? 'compras@bullspay.com.br',
                                 "phone" => null,
                                 "document" => $validatedData['customer_document'] ?? null,
                                 "country" => "BR",
