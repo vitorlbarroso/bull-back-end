@@ -386,11 +386,13 @@ class CelcashWebhooksController extends Controller
                     $buyerUser = User::create($data);
                 }
                 catch (\Exception $e) {
+                    Log::error('Erro ao criar o usuário pagante', ["erro" => $e->getMessage(), "data" => $data]);
+
                     \App\Models\CelcashWebhook::create([
                         'webhook_title' => 'ERRO AO CRIAR USUÁRIO PAGANTE',
                         'webhook_id' => $validatedData['message']['reference_code'],
                         'webhook_event' => $validatedData['message'],
-                        'webhook_data' => $request,
+                        'webhook_data' => 'erro',
                     ]);
                 }
             }
