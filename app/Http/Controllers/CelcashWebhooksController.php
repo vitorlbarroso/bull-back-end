@@ -364,8 +364,8 @@ class CelcashWebhooksController extends Controller
                 $generateRandomPassword = UserService::generateRandomPassword();
 
                 $data = [
-                    'name' => $getTransaction->buyer_name,
-                    'email' => $getTransaction->buyer_email,
+                    'name' => $getTransaction->buyer_name ?? "Bulls Pay",
+                    'email' => $getTransaction->buyer_email ?? "compras@bullspay.com.br",
                     'password' => $generateRandomPassword
                 ];
 
