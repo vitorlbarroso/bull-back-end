@@ -12,6 +12,8 @@ use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class WithdrawalRequestsController extends Controller
 {
@@ -52,70 +54,77 @@ class WithdrawalRequestsController extends Controller
 
         $user = Auth::user();
 
-        $getUserPayPendences = UserService::getPayConfigsPendences($user);
+        // Usando lock para prevenir race conditions
+        return DB::transaction(function () use ($validated, $user) {
+            // Lock o usuário para garantir que apenas uma requisição seja processada por vez
+            $user = User::lockForUpdate()->find($user->id);
 
-        if ($getUserPayPendences || $user->is_blocked) {
-            return Responses::ERROR('Esse usuário não está autorizado a realizar saques', $getUserPayPendences, 1200, 400);
-        }
+            $getUserPayPendences = UserService::getPayConfigsPendences($user);
 
-        $getTotalAuthorizedWithdrawal = UserPaymentsDataService::getWithdrawalData();
-
-        if (($getTotalAuthorizedWithdrawal['total_available'] * 100) < $validated['amount']) {
-            return Responses::ERROR('O valor solicitado é maior que o disponível para saque!', $getTotalAuthorizedWithdrawal['total_available'], 1300, 400);
-        }
-
-        $getUserActiveAccount = UserBankAccount::where('user_id', $user->id)
-            ->where('is_active', 1)
-            ->first();
-
-        if (!$getUserActiveAccount) {
-            return Responses::ERROR('O usuário não possui uma conta bancária cadastrada!', null, 1400, 400);
-        }
-
-        try {
-            $createWithdrawalRequest = WithdrawalRequests::create([
-                'user_id' => $user->id,
-                'user_bank_accounts_id' => $getUserActiveAccount->id,
-                'withdrawal_amount' => $validated['amount'],
-                'status' => 'pending',
-                'tax_value' => $user->withdrawal_tax
-            ]);
-
-            if ($user->auto_withdrawal) {
-                $adminBaseUrl = env('ADMIN_BASE_URL');
-                $xApiToken = env('XATK');
-
-                $headers = [
-                    'Content-Type' => 'application/json'
-                ];
-
-                $body = [
-                    'withdrawal_id' => $createWithdrawalRequest->id,
-                    'x_api_token' => $xApiToken,
-                ];
-
-                try {
-                    $sendAutoApprove = Http::WithHeaders($headers)
-                        ->post(
-                            env('ADMIN_BASE_URL') . '/system/wdal/wdal_update',
-                            $body
-                        );
-
-                    $response = $sendAutoApprove->json();
-
-                    Log::info('Resposta da requisição para autowithdrawal recebida: ', ['response' => $response]);
-                }
-                catch (\Exception $e) {
-                    Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage());
-                }
+            if ($getUserPayPendences || $user->is_blocked) {
+                return Responses::ERROR('Esse usuário não está autorizado a realizar saques', $getUserPayPendences, 1200, 400);
             }
 
-            return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
-        }
-        catch (\Exception $e) {
-            Log::error('Não foi possível solicitar um saque para o usuário', ['error' => $e->getMessage()]);
+            $getTotalAuthorizedWithdrawal = UserPaymentsDataService::getWithdrawalData();
 
-            return Responses::ERROR('Ocorreu um erro ao solicitar o saque!', $e->getMessage(), -1100, 400);
-        }
+            if (($getTotalAuthorizedWithdrawal['total_available'] * 100) < $validated['amount']) {
+                return Responses::ERROR('O valor solicitado é maior que o disponível para saque!', $getTotalAuthorizedWithdrawal['total_available'], 1300, 400);
+            }
+
+            $getUserActiveAccount = UserBankAccount::where('user_id', $user->id)
+                ->where('is_active', 1)
+                ->first();
+
+            if (!$getUserActiveAccount) {
+                return Responses::ERROR('O usuário não possui uma conta bancária cadastrada!', null, 1400, 400);
+            }
+
+            try {
+                $createWithdrawalRequest = WithdrawalRequests::create([
+                    'user_id' => $user->id,
+                    'user_bank_accounts_id' => $getUserActiveAccount->id,
+                    'withdrawal_amount' => $validated['amount'],
+                    'status' => 'pending',
+                    'tax_value' => $user->withdrawal_tax
+                ]);
+
+                if ($user->auto_withdrawal) {
+                    $adminBaseUrl = env('ADMIN_BASE_URL');
+                    $xApiToken = env('XATK');
+
+                    $headers = [
+                        'Content-Type' => 'application/json'
+                    ];
+
+                    $body = [
+                        'withdrawal_id' => $createWithdrawalRequest->id,
+                        'x_api_token' => $xApiToken,
+                    ];
+
+                    try {
+                        $sendAutoApprove = Http::WithHeaders($headers)
+                            ->post(
+                                env('ADMIN_BASE_URL') . '/system/wdal/wdal_update',
+                                $body
+                            );
+
+                        $response = $sendAutoApprove->json();
+
+                        Log::info('Resposta da requisição para autowithdrawal recebida: ', ['response' => $response]);
+                    }
+                    catch (\Exception $e) {
+                        Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage());
+                    }
+                }
+
+                return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
+            }
+            catch (\Exception $e) {
+                Log::error('Não foi possível solicitar um saque para o usuário', ['error' => $e->getMessage()]);
+                throw $e; // Propaga a exceção para que a transação seja revertida
+
+                return Responses::ERROR('Não foi possível solicitar um saque para o usuário', 'Uma solicitação já está sendo processada!', 1500, 400);
+            }
+        });
     }
 }
