@@ -328,13 +328,13 @@ class CelcashWebhooksController extends Controller
             ->with('payment_offers', function($query) {
                 $query->where('type', 'principal')
                     ->with('offer', function($query) {
-                        $query->with('product:id,email_support,product_name')
+                        $query->with('product', function($query) {
+                            $query->with('user:id,email');
+                            $query->select(['id', 'email_support', 'product_name', 'user_id']);
+                        })
                         ->select(['id', 'product_id', 'utmify_token']);
                     })
                 ->select(['id', 'celcash_payments_id', 'products_offerings_id', 'type']);
-            })
-            ->with('receiver_user_id', function($query) {
-                $query->select(['id', 'email']);
             })
             ->first();
 
@@ -509,11 +509,11 @@ class CelcashWebhooksController extends Controller
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer KAWSGjngsnasoNBI320933'
             ])->post('https://bullspay.vercel.app/api/send-notification', [
-                'email' => $getTransaction->receiver_user_id->email,
+                'email' => $getTransaction->payment_offers[0]->offer->product->user->email,
                 'title' => 'Uma venda pix foi paga!',
                 'message' => 'Sua comissão foi de R$ ' . number_format($getTransaction->value_to_receiver / 100, 2, ',', '.')
             ]);
-
+    
             if (!$notificationResponse->successful()) {
                 Log::error('Falha ao enviar notificação', [
                     'status' => $notificationResponse->status(),
@@ -544,17 +544,17 @@ class CelcashWebhooksController extends Controller
             'data.amount' => 'required'
         ]);
 
-        $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['data']['transactionId'])
+        $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['message']['reference_code'])
             ->with('payment_offers', function($query) {
                 $query->where('type', 'principal')
                     ->with('offer', function($query) {
-                        $query->with('product:id,email_support,product_name')
-                            ->select(['id', 'product_id', 'utmify_token']);
+                        $query->with('product', function($query) {
+                            $query->with('user:id,email');
+                            $query->select(['id', 'email_support', 'product_name', 'user_id']);
+                        })
+                        ->select(['id', 'product_id', 'utmify_token']);
                     })
-                    ->select(['id', 'celcash_payments_id', 'products_offerings_id', 'type']);
-            })
-            ->with('receiver_user_id', function($query) {
-                $query->select(['id', 'email']);
+                ->select(['id', 'celcash_payments_id', 'products_offerings_id', 'type']);
             })
             ->first();
 
@@ -727,11 +727,11 @@ class CelcashWebhooksController extends Controller
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer KAWSGjngsnasoNBI320933'
             ])->post('https://bullspay.vercel.app/api/send-notification', [
-                'email' => $getTransaction->receiver_user_id->email,
+                'email' => $getTransaction->payment_offers[0]->offer->product->user->email,
                 'title' => 'Uma venda pix foi paga!',
                 'message' => 'Sua comissão foi de R$ ' . number_format($getTransaction->value_to_receiver / 100, 2, ',', '.')
             ]);
-
+    
             if (!$notificationResponse->successful()) {
                 Log::error('Falha ao enviar notificação', [
                     'status' => $notificationResponse->status(),
