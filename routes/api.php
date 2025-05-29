@@ -115,7 +115,7 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function() {
     Route::delete('/membership/{membership_id}/offer/{offer_id}', [MembersAreaOffersIntegrationsController::class, 'destroy']);
 });
 Route::prefix('payments')->group(function() {
-    Route::post('/pix', [CelCashController::class, 'generate_payment_pix']);
+    Route::post('/pix', [CelCashController::class, '']);
 
     Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/create_user_cpf', [CelCashController::class, 'create_user_cpf']);

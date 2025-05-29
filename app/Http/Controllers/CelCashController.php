@@ -504,6 +504,27 @@ class CelCashController extends Controller
             return Responses::ERROR('Ocorreu um erro ao salvar o pedido!', $e->getMessage(), 1500, 400);
         }
 
+        // Enviando notificação
+        try {
+            $notificationResponse = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer KAWSGjngsnasoNBI320933'
+            ])->post('https://bullspay.vercel.app/api/send-notification', [
+                'email' => $getPrincipalOffer->product->user->email,
+                'title' => 'Uma venda pix foi gerada!',
+                'message' => 'Sua comissão será de R$ ' . number_format($calculateTax / 100, 2, ',', '.')
+            ]);
+
+            if (!$notificationResponse->successful()) {
+                Log::error('Falha ao enviar notificação', [
+                    'status' => $notificationResponse->status(),
+                    'response' => $notificationResponse->json()
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Erro ao enviar notificação: ' . $e->getMessage());
+        }
+
         try {
             Mail::to($validatedData['customer_email'])->send(new GeneratePixMail($validatedData['customer_name'], $pixReference, $getPrincipalOffer->product->email_support, ($totalPrice / 100), $unicId));
         }

@@ -333,6 +333,9 @@ class CelcashWebhooksController extends Controller
                     })
                 ->select(['id', 'celcash_payments_id', 'products_offerings_id', 'type']);
             })
+            ->with('receiver_user_id', function($query) {
+                $query->select(['id', 'email']);
+            })
             ->first();
 
         if (!$getTransaction) {
@@ -501,6 +504,26 @@ class CelcashWebhooksController extends Controller
             ]);
         }
 
+        try {
+            $notificationResponse = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer KAWSGjngsnasoNBI320933'
+            ])->post('https://bullspay.vercel.app/api/send-notification', [
+                'email' => $getTransaction->receiver_user_id->email,
+                'title' => 'Uma venda pix foi paga!',
+                'message' => 'Sua comissão foi de R$ ' . number_format($getTransaction->value_to_receiver / 100, 2, ',', '.')
+            ]);
+
+            if (!$notificationResponse->successful()) {
+                Log::error('Falha ao enviar notificação', [
+                    'status' => $notificationResponse->status(),
+                    'response' => $notificationResponse->json()
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Erro ao enviar notificação: ' . $e->getMessage());
+        }
+
         return Responses::SUCCESS('Status do transação atualizado com sucesso!', null, 200);
     }
 
@@ -529,6 +552,9 @@ class CelcashWebhooksController extends Controller
                             ->select(['id', 'product_id', 'utmify_token']);
                     })
                     ->select(['id', 'celcash_payments_id', 'products_offerings_id', 'type']);
+            })
+            ->with('receiver_user_id', function($query) {
+                $query->select(['id', 'email']);
             })
             ->first();
 
@@ -694,6 +720,26 @@ class CelcashWebhooksController extends Controller
             $getTransaction->update([
                 'status' => $status
             ]);
+        }
+
+        try {
+            $notificationResponse = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer KAWSGjngsnasoNBI320933'
+            ])->post('https://bullspay.vercel.app/api/send-notification', [
+                'email' => $getTransaction->receiver_user_id->email,
+                'title' => 'Uma venda pix foi paga!',
+                'message' => 'Sua comissão foi de R$ ' . number_format($getTransaction->value_to_receiver / 100, 2, ',', '.')
+            ]);
+
+            if (!$notificationResponse->successful()) {
+                Log::error('Falha ao enviar notificação', [
+                    'status' => $notificationResponse->status(),
+                    'response' => $notificationResponse->json()
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Erro ao enviar notificação: ' . $e->getMessage());
         }
 
         return Responses::SUCCESS('Status do transação atualizado com sucesso!', null, 200);
