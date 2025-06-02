@@ -185,7 +185,7 @@ return [
             'queue' => ['default', 'FacebookPixelEvent', 'withdrawals'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => 1,
+            'maxProcesses' => 10,
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 128,
@@ -195,29 +195,43 @@ return [
         ],
     ],
 
-    'environments' => [
-        'production' => [
-            'supervisor-1' => [
-                'connection' => 'redis',
-                'queues' => ['default', 'FacebookPixelEvent', 'withdrawals'],
-                'balance' => 'false',
-                'autoScalingStrategy' => 'time',
-                'maxProcesses' => 10,
-                'maxTime' => 0,
-                'maxJobs' => 20,
-                'memory' => 128,
-                'tries' => 2,
-                'timeout' => 60,
-                'nice' => 0,
-                'processes' => 2,
-                'sleep' => 5, // Aguarda 5 segundos entre verificações de job
-            ],
-        ],
+       'environments' => [
+    		'production' => [
+        		'supervisor-default' => [
+            		'connection' => 'redis',
+            		'queue' => ['default'],
+            		'processes' => 2,
+           		 'tries' => 2,
+            		'timeout' => 60,
+            		'sleep' => 3,
+            		'balance' => false,
+        		],
 
+        	'supervisor-facebook' => [
+            		'connection' => 'redis',
+            		'queue' => ['FacebookPixelEvent'],
+            		'processes' => 2,
+            		'tries' => 1,
+            		'timeout' => 60,
+            		'sleep' => 2,
+            		'balance' => false,
+        	],
+
+        	'supervisor-withdrawals' => [
+            		'connection' => 'redis',
+            		'queue' => ['withdrawals'],
+            		'processes' => 2,
+            		'tries' => 3,
+            		'timeout' => 60,
+           	 	'sleep' => 4,
+            		'balance' => false,
+		],
+
+              ],
         'local' => [
-            'supervisor-1' => [
-                'maxProcesses' => 3,
-            ],
-        ],
+            	'supervisor-1' => [
+                 	'maxProcesses' => 3,
+           	],
+       	],
     ],
 ];
