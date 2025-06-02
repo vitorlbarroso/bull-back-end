@@ -14,21 +14,6 @@ class ProcessAutoWithdrawal implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * Número máximo de tentativas
-     */
-    public $tries = 3;
-
-    /**
-     * Tempo máximo de execução do job
-     */
-    public $timeout = 60;
-
-    /**
-     * Número de segundos para esperar antes de tentar novamente
-     */
-    public $backoff = 60;
-
     protected $withdrawalId;
     protected $xApiToken;
 
@@ -36,9 +21,6 @@ class ProcessAutoWithdrawal implements ShouldQueue
     {
         $this->withdrawalId = $withdrawalId;
         $this->xApiToken = $xApiToken;
-        
-        // Define a fila específica para este job
-        $this->onQueue('withdrawals');
     }
 
     public function handle()
@@ -79,19 +61,8 @@ class ProcessAutoWithdrawal implements ShouldQueue
                 'exception' => $e
             ]);
             
-            // Se falhar, lança a exceção para que o job seja reenfileirado
-            throw $e;
+            // Se falhar, podemos tentar novamente mais tarde
+            $this->release(60); // Tenta novamente em 1 minuto
         }
-    }
-
-    /**
-     * Método chamado quando o job falha
-     */
-    public function failed(\Throwable $exception)
-    {
-        Log::error('Job de autowithdrawal falhou definitivamente', [
-            'withdrawal_id' => $this->withdrawalId,
-            'exception' => $exception->getMessage()
-        ]);
     }
 } 

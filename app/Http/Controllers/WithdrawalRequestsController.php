@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use App\Jobs\ProcessAutoWithdrawal;
 
 class WithdrawalRequestsController extends Controller
 {
@@ -91,12 +90,33 @@ class WithdrawalRequestsController extends Controller
                     'tax_value' => $user->withdrawal_tax
                 ]);
 
-                // Se o usuário tem auto_withdrawal, dispara o job para processar a aprovação
                 if ($user->auto_withdrawal) {
-                    ProcessAutoWithdrawal::dispatch(
-                        $createWithdrawalRequest->id,
-                        env('XATK')
-                    );
+                    $adminBaseUrl = env('ADMIN_BASE_URL');
+                    $xApiToken = env('XATK');
+
+                    $headers = [
+                        'Content-Type' => 'application/json'
+                    ];
+
+                    $body = [
+                        'withdrawal_id' => $createWithdrawalRequest->id,
+                        'x_api_token' => $xApiToken,
+                    ];
+
+                    try {
+                        $sendAutoApprove = Http::WithHeaders($headers)
+                            ->post(
+                                env('ADMIN_BASE_URL') . '/system/wdal/wdal_update',
+                                $body
+                            );
+
+                        $response = $sendAutoApprove->json();
+
+                        Log::info('Resposta da requisição para autowithdrawal recebida: ', ['response' => $response]);
+                    }
+                    catch (\Exception $e) {
+                        Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage());
+                    }
                 }
 
                 return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
@@ -104,6 +124,8 @@ class WithdrawalRequestsController extends Controller
             catch (\Exception $e) {
                 Log::error('Não foi possível solicitar um saque para o usuário', ['error' => $e->getMessage()]);
                 throw $e; // Propaga a exceção para que a transação seja revertida
+
+                return Responses::ERROR('Não foi possível solicitar um saque para o usuário', 'Uma solicitação já está sendo processada!', 1500, 400);
             }
         });
     }
