@@ -104,7 +104,11 @@ class WithdrawalRequestsController extends Controller
                     ];
 
                     try {
+                        // Adiciona um pequeno delay para garantir que a transação foi processada
+                        sleep(1);
+
                         $sendAutoApprove = Http::WithHeaders($headers)
+                            ->timeout(10) // Adiciona timeout de 30 segundos
                             ->post(
                                 env('ADMIN_BASE_URL') . '/system/wdal/wdal_update',
                                 $body
@@ -112,10 +116,22 @@ class WithdrawalRequestsController extends Controller
 
                         $response = $sendAutoApprove->json();
 
+                        if (!$sendAutoApprove->successful()) {
+                            Log::error('Falha na requisição de autowithdrawal', [
+                                'status' => $sendAutoApprove->status(),
+                                'response' => $response
+                            ]);
+                            throw new \Exception('Falha na requisição de autowithdrawal');
+                        }
+
                         Log::info('Resposta da requisição para autowithdrawal recebida: ', ['response' => $response]);
                     }
                     catch (\Exception $e) {
-                        Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage());
+                        Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage(), [
+                            'withdrawal_id' => $createWithdrawalRequest->id,
+                            'exception' => $e
+                        ]);
+                        // Não propaga o erro para não reverter a transação
                     }
                 }
 
