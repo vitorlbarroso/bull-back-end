@@ -105,7 +105,7 @@ class WithdrawalRequestsController extends Controller
 
                     try {
                         // Adiciona um pequeno delay para garantir que a transação foi processada
-                        sleep(1);
+                        sleep(3);
 
                         $sendAutoApprove = Http::WithHeaders($headers)
                             ->timeout(10) // Adiciona timeout de 30 segundos
