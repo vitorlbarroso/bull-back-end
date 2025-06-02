@@ -89,53 +89,6 @@ class WithdrawalRequestsController extends Controller
                     'status' => 'pending',
                     'tax_value' => $user->withdrawal_tax
                 ]);
-
-                if ($user->auto_withdrawal) {
-                    $adminBaseUrl = env('ADMIN_BASE_URL');
-                    $xApiToken = env('XATK');
-
-                    $headers = [
-                        'Content-Type' => 'application/json'
-                    ];
-
-                    $body = [
-                        'withdrawal_id' => $createWithdrawalRequest->id,
-                        'x_api_token' => $xApiToken,
-                    ];
-
-                    try {
-                        // Adiciona um pequeno delay para garantir que a transação foi processada
-                        sleep(3);
-
-                        $sendAutoApprove = Http::WithHeaders($headers)
-                            ->timeout(10) // Adiciona timeout de 30 segundos
-                            ->post(
-                                env('ADMIN_BASE_URL') . '/system/wdal/wdal_update',
-                                $body
-                            );
-
-                        $response = $sendAutoApprove->json();
-
-                        if (!$sendAutoApprove->successful()) {
-                            Log::error('Falha na requisição de autowithdrawal', [
-                                'status' => $sendAutoApprove->status(),
-                                'response' => $response
-                            ]);
-                            throw new \Exception('Falha na requisição de autowithdrawal');
-                        }
-
-                        Log::info('Resposta da requisição para autowithdrawal recebida: ', ['response' => $response]);
-                    }
-                    catch (\Exception $e) {
-                        Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage(), [
-                            'withdrawal_id' => $createWithdrawalRequest->id,
-                            'exception' => $e
-                        ]);
-                        // Não propaga o erro para não reverter a transação
-                    }
-                }
-
-                return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
             }
             catch (\Exception $e) {
                 Log::error('Não foi possível solicitar um saque para o usuário', ['error' => $e->getMessage()]);
@@ -144,5 +97,48 @@ class WithdrawalRequestsController extends Controller
                 return Responses::ERROR('Não foi possível solicitar um saque para o usuário', 'Uma solicitação já está sendo processada!', 1500, 400);
             }
         });
+
+        if ($user->auto_withdrawal) {
+            $adminBaseUrl = env('ADMIN_BASE_URL');
+            $xApiToken = env('XATK');
+
+            $headers = [
+                'Content-Type' => 'application/json'
+            ];
+
+            $body = [
+                'withdrawal_id' => $createWithdrawalRequest->id,
+                'x_api_token' => $xApiToken,
+            ];
+
+            try {
+                $sendAutoApprove = Http::WithHeaders($headers)
+                    ->post(
+                        env('ADMIN_BASE_URL') . '/system/wdal/wdal_update',
+                        $body
+                    );
+
+                $response = $sendAutoApprove->json();
+
+                if (!$sendAutoApprove->successful()) {
+                    Log::error('Falha na requisição de autowithdrawal', [
+                        'status' => $sendAutoApprove->status(),
+                        'response' => $response
+                    ]);
+                    throw new \Exception('Falha na requisição de autowithdrawal');
+                }
+
+                Log::info('Resposta da requisição para autowithdrawal recebida: ', ['response' => $response]);
+            }
+            catch (\Exception $e) {
+                Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage(), [
+                    'withdrawal_id' => $createWithdrawalRequest->id,
+                    'exception' => $e
+                ]);
+                // Não propaga o erro para não reverter a transação
+            }
+        }
+
+        return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
     }
 }
