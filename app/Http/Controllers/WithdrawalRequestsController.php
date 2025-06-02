@@ -55,7 +55,7 @@ class WithdrawalRequestsController extends Controller
         $user = Auth::user();
 
         // Usando lock para prevenir race conditions
-        return DB::transaction(function () use ($validated, $user) {
+        DB::transaction(function () use ($validated, $user) {
             // Lock o usuário para garantir que apenas uma requisição seja processada por vez
             $user = User::lockForUpdate()->find($user->id);
 
