@@ -182,7 +182,7 @@ return [
     'defaults' => [
         'supervisor-1' => [
             'connection' => 'redis',
-            'queue' => ['default', 'FacebookPixelEvent'],
+            'queue' => ['default', 'FacebookPixelEvent', 'withdrawals'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
             'maxProcesses' => 1,
@@ -199,7 +199,7 @@ return [
         'production' => [
             'supervisor-1' => [
                 'connection' => 'redis',
-                'queues' => ['default', 'FacebookPixelEvent'],
+                'queues' => ['default', 'FacebookPixelEvent', 'withdrawals'],
                 'balance' => 'false',
                 'autoScalingStrategy' => 'time',
                 'maxProcesses' => 10,
