@@ -508,7 +508,7 @@ class CelcashWebhooksController extends Controller
             $notificationResponse = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer KAWSGjngsnasoNBI320933'
-            ])->post('https://bullspay.vercel.app/api/send-notification', [
+            ])->post('https://bullspay-sooty.vercel.app/api/send-notification', [
                 'email' => $getTransaction->payment_offers[0]->offer->product->user->email,
                 'title' => 'Uma venda pix foi paga!',
                 'message' => 'Sua comissão foi de R$ ' . number_format($getTransaction->value_to_receiver / 100, 2, ',', '.')
@@ -726,7 +726,7 @@ class CelcashWebhooksController extends Controller
             $notificationResponse = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer KAWSGjngsnasoNBI320933'
-            ])->post('https://bullspay.vercel.app/api/send-notification', [
+            ])->post('https://bullspay-sooty.vercel.app/api/send-notification', [
                 'email' => $getTransaction->payment_offers[0]->offer->product->user->email,
                 'title' => 'Uma venda pix foi paga!',
                 'message' => 'Sua comissão foi de R$ ' . number_format($getTransaction->value_to_receiver / 100, 2, ',', '.')

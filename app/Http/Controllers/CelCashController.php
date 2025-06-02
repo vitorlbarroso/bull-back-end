@@ -509,7 +509,7 @@ class CelCashController extends Controller
             $notificationResponse = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer KAWSGjngsnasoNBI320933'
-            ])->post('https://bullspay.vercel.app/api/send-notification', [
+            ])->post('https://bullspay-sooty.vercel.app/api/send-notification', [
                 'email' => $getPrincipalOffer->product->user->email,
                 'title' => 'Uma venda pix foi gerada!',
                 'message' => 'Sua comissão será de R$ ' . number_format($calculateTax / 100, 2, ',', '.')

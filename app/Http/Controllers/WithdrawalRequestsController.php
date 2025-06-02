@@ -79,6 +79,8 @@ class WithdrawalRequestsController extends Controller
                 return Responses::ERROR('O usuário não possui uma conta bancária cadastrada!', null, 1400, 400);
             }
 
+            Log::info('Dados do usuário que solicitou saque: ', ['user' => $user, 'auto_withdrawal' => $user->auto_withdrawal]);
+            
             try {
                 $createWithdrawalRequest = WithdrawalRequests::create([
                     'user_id' => $user->id,
