@@ -122,21 +122,25 @@ class UserPaymentsDataService
         ];
 
         try {
-            $totalPayments = CelcashPayments::where('status', 'payed_pix')
-                ->orWhere('status', 'chargeback')
-                ->orWhere('status', 'reversed')
-                ->where('receiver_user_id', $user->id)
+            $totalPayments = CelcashPayments::where('receiver_user_id', $user->id)
+                ->where(function($query) {
+                    $query->where('status', 'payed_pix')
+                        ->orWhere('status', 'chargeback')
+                        ->orWhere('status', 'reversed');
+                })
                 ->whereBetween('created_at', [$initialDate, $finishDate])
                 ->count();
 
-            $totalChargeback = CelcashPayments::where('status', 'chargeback')
-                ->orWhere('status', 'reversed')
-                ->where('receiver_user_id', $user->id)
+            $totalChargeback = CelcashPayments::where('receiver_user_id', $user->id)
+                ->where(function($query) {
+                    $query->where('status', 'chargeback')
+                        ->orWhere('status', 'reversed');
+                })
                 ->whereBetween('created_at', [$initialDate, $finishDate])
                 ->count();
 
-            if ($totalPayments + $totalChargeback > 0) {
-                $percentageChargeback = ($totalChargeback / ($totalPayments + $totalChargeback)) * 100;
+            if ($totalPayments > 0) {
+                $percentageChargeback = ($totalChargeback / $totalPayments) * 100;
 
                 $returnData['total'] = $totalChargeback;
                 $returnData['percentage'] = round($percentageChargeback, 2);
