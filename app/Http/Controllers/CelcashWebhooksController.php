@@ -544,7 +544,7 @@ class CelcashWebhooksController extends Controller
             'data.amount' => 'required'
         ]);
 
-        $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['message']['reference_code'])
+        $getTransaction = CelcashPayments::where('galax_pay_id', $validatedData['data']['transactionId'])
             ->with('payment_offers', function($query) {
                 $query->where('type', 'principal')
                     ->with('offer', function($query) {
