@@ -265,11 +265,13 @@ class UserPaymentsDataService
         if ($dateDiffInDays > 0) {
             // Agrupamento por dia na tabela celcash_payments
             $sales = DB::table('celcash_payments')
-                ->where('celcash_payments.receiver_user_id', $user->id)
-                ->selectRaw('DATE(created_at) as date, SUM(value_to_receiver) as total_value')
+                ->where('receiver_user_id', $user->id)
+                ->where(function($query) {
+                    $query->where('status', 'payed_pix')
+                        ->orWhere('status', 'authorized');
+                })
                 ->whereBetween('created_at', [$initialDate, $finishDate])
-                ->where('celcash_payments.status', 'payed_pix')
-                ->orWhere('celcash_payments.status', 'authorized')
+                ->selectRaw('DATE(created_at) as date, SUM(value_to_receiver) as total_value')
                 ->groupBy(DB::raw('DATE(created_at)'))
                 ->get();
 
@@ -291,10 +293,13 @@ class UserPaymentsDataService
             $finishDate = Carbon::now(); // Horário atual
 
             $sales = DB::table('celcash_payments')
-                ->selectRaw('HOUR(created_at) as hour, SUM(value_to_receiver) as total_value')
+                ->where('receiver_user_id', $user->id)
+                ->where(function($query) {
+                    $query->where('status', 'payed_pix')
+                        ->orWhere('status', 'authorized');
+                })
                 ->whereBetween('created_at', [$initialDate, $finishDate])
-                ->where('celcash_payments.status', 'payed_pix')
-                ->orWhere('celcash_payments.status', 'authorized')
+                ->selectRaw('HOUR(created_at) as hour, SUM(value_to_receiver) as total_value')
                 ->groupBy(DB::raw('HOUR(created_at)'))
                 ->get();
 
