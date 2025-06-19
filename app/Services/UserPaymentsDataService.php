@@ -403,7 +403,7 @@ class UserPaymentsDataService
             $totalChargebacksCount = $paymentData->total_chargebacks_count;
 
             // Cálculo do valor total disponível
-            $totalAmount = ($totalPayments - ($totalWithdraws / 100)) - $totalChargebacks;
+            $totalAmount = ($totalPayments - ($totalWithdraws / 100));
             $availablePayments = max(($totalAmount - $totalPendingPayments), 0);
 
             // Atribuir valores ao array de retorno
