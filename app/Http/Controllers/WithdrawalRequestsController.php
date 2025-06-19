@@ -54,8 +54,11 @@ class WithdrawalRequestsController extends Controller
 
         $user = Auth::user();
 
+        $createWithdrawalRequest = null;
+
+        $withdrawalRequestId = null;
         // Usando lock para prevenir race conditions
-        return DB::transaction(function () use ($validated, $user) {
+        DB::transaction(function () use ($validated, $user, &$createWithdrawalRequest, &$withdrawalRequestId) {
             // Lock o usuário para garantir que apenas uma requisição seja processada por vez
             $user = User::lockForUpdate()->find($user->id);
 
@@ -90,36 +93,11 @@ class WithdrawalRequestsController extends Controller
                     'tax_value' => $user->withdrawal_tax
                 ]);
 
-                if ($user->auto_withdrawal) {
-                    $adminBaseUrl = env('ADMIN_BASE_URL');
-                    $xApiToken = env('XATK');
+                $withdrawalRequestId = $createWithdrawalRequest->id;
 
-                    $headers = [
-                        'Content-Type' => 'application/json'
-                    ];
-
-                    $body = [
-                        'withdrawal_id' => $createWithdrawalRequest->id,
-                        'x_api_token' => $xApiToken,
-                    ];
-
-                    try {
-                        $sendAutoApprove = Http::WithHeaders($headers)
-                            ->post(
-                                env('ADMIN_BASE_URL') . '/system/wdal/wdal_update',
-                                $body
-                            );
-
-                        $response = $sendAutoApprove->json();
-
-                        Log::info('Resposta da requisição para autowithdrawal recebida: ', ['response' => $response]);
-                    }
-                    catch (\Exception $e) {
-                        Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage());
-                    }
+                if (!$user->auto_withdrawal) {
+                    return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
                 }
-
-                return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
             }
             catch (\Exception $e) {
                 Log::error('Não foi possível solicitar um saque para o usuário', ['error' => $e->getMessage()]);
@@ -128,5 +106,37 @@ class WithdrawalRequestsController extends Controller
                 return Responses::ERROR('Não foi possível solicitar um saque para o usuário', 'Uma solicitação já está sendo processada!', 1500, 400);
             }
         });
+
+        if ($user->auto_withdrawal) {
+            $adminBaseUrl = env('ADMIN_BASE_URL');
+            $xApiToken = env('XATK');
+
+            $headers = [
+                'Content-Type' => 'application/json'
+            ];
+
+            $body = [
+                'withdrawal_id' => $withdrawalRequestId,
+                'x_api_token' => $xApiToken,
+            ];
+
+            try {
+                $sendAutoApprove = Http::WithHeaders($headers)
+                    ->post(
+                        env('ADMIN_BASE_URL') . '/system/wdal/wdal_update',
+                        $body
+                    );
+
+                $response = $sendAutoApprove->json();
+
+                Log::info('Resposta da requisição para autowithdrawal recebida: ', ['response' => $response]);
+            }
+            catch (\Exception $e) {
+                Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage());
+                return Responses::ERROR('Erro na requisição de autowithdrawal: ' . $e->getMessage(), null, 1600, 400);
+            }
+        }
+
+        return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
     }
 }

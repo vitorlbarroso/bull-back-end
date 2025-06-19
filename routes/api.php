@@ -138,7 +138,7 @@ Route::prefix('bank')->middleware('auth:sanctum')->group(function() {
 Route::prefix('withdraws')->middleware('auth:sanctum')->group(function() {
     Route::get('/infos', [WithdrawalRequestsController::class, 'get_withdraw_infos']);
     Route::get('/requests', [WithdrawalRequestsController::class, 'withdraws_requests']);
-    Route::post('/request', [WithdrawalRequestsController::class, 'request_withdrawal']);
+    Route::post('/request', [WithdrawalRequestsController::class, 'request_withdrawal'])->middleware('withdrawal.rate.limit');
 });
 
 Route::prefix('webhooks')->group(function() {
