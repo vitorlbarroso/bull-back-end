@@ -46,6 +46,8 @@ class User extends Authenticatable
         'cash_in_adquirer_name',
         'cash_out_adquirer_name',
         'auto_withdrawal',
+        'min_product_ticket',
+        'max_product_ticket',
     ];
 
     /**

@@ -78,6 +78,21 @@ class ProductOfferingController extends Controller
     {
         $user = Auth::user();
 
+        $price = $request->price;
+        $fake_price = $request->fake_price;
+
+        if ($price > $fake_price) {
+            return Responses::ERROR('O preço da oferta não pode ser maior que o preço fictício', null, -1200, 400);
+        }
+
+        if ($price < $user->min_product_ticket) {
+            return Responses::ERROR('O preço da oferta não pode ser menor que R$ ' . $user->min_product_ticket, null, -1200, 400);
+        }
+
+        if ($price > $user->max_product_ticket) {
+            return Responses::ERROR('O preço da oferta não pode ser maior que R$ ' . $user->max_product_ticket, null, -1200, 400);
+        }
+
         $getProduct = Product::where('id', $request->product_id)
             ->where('user_id', $user->id)
             ->where('is_blocked', 0)

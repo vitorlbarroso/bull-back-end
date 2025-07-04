@@ -19,6 +19,8 @@ class Configuration extends Model
         'default_cash_in_adquirer',
         'default_cash_out_adquirer',
         'admin_access_token',
+        'default_min_product_ticket',
+        'default_max_product_ticket',
     ];
 
     protected $hidden = [

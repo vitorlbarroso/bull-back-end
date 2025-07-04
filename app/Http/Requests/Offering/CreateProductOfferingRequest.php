@@ -21,7 +21,7 @@ class CreateProductOfferingRequest extends FormRequest
             'product_id' => 'required|integer',
             'offer_name' => 'required',
             'utmify_token' => 'nullable|string',
-            'price' => 'required|numeric|min:5',
+            'price' => 'required|numeric',
             'fake_price' => 'required|numeric|gt:price',
             'offer_type' => 'required|string',
             'recurrently_installments' => 'required|integer',
