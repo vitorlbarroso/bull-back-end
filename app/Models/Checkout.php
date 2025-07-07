@@ -37,6 +37,7 @@ class Checkout extends Model
         'text_display',
         'text_font_color',
         'text_bg_color',
+        'warning_pix',
     ];
 
     public function offer(): BelongsTo

@@ -42,6 +42,7 @@ class UpdatecheckoutRequest extends FormRequest
             'text.text_display' => 'boolean',
             'text.text_font_color' => 'string',
             'text.text_bg_color' => 'string',
+            'warning_pix' => 'boolean',
         ];
     }
 

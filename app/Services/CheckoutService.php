@@ -73,7 +73,7 @@ class CheckoutService
             ])
                 ->where('checkout_hash', $hashIdentifier)
                 ->where('is_deleted', 0)
-                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style', 'is_active_contact_and_documents_fields', 'is_active_address_fields', 'back_redirect_url', 'elements_color', 'text', 'text_display', 'text_font_color', 'text_bg_color', 'fixed_values_fields')
+                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style', 'is_active_contact_and_documents_fields', 'is_active_address_fields', 'back_redirect_url', 'elements_color', 'text', 'text_display', 'text_font_color', 'text_bg_color', 'fixed_values_fields', 'warning_pix')
                 ->first();
             return $this->formatCheckoutData($checkout);
         } catch (\Exception $e) {
@@ -107,6 +107,7 @@ class CheckoutService
                 'is_active_contact_and_documents_fields' => $checkout->is_active_contact_and_documents_fields,
                 'is_active_address_fields' => $checkout->is_active_address_fields,
                 'fixed_values_fields' => $checkout->fixed_values_fields,
+                'warning_pix' => $checkout->warning_pix,
             ],
             'initiate_checkout_pixels' => empty($initiateCheckoutPixels) ? null : $initiateCheckoutPixels,
             'purchase_pixels' => empty($PixelGeneratePayment) ? null : $PixelGeneratePayment,
@@ -234,6 +235,7 @@ class CheckoutService
             'banner_id' => $validatedData['banner']['id'] ?? null,
             'banner_display' => $validatedData['banner']['display'] ?? true,
             'background_color' => $validatedData['configs']['background_color'],
+            'warning_pix' => $validatedData['warning_pix'],
             'checkout_style' => $validatedData['checkout_style'],
             'is_active_contact_and_documents_fields' => $validatedData['is_active_contact_and_documents_fields'],
             'is_active_address_fields' => $validatedData['is_active_address_fields'],

@@ -252,7 +252,7 @@ class CheckoutController extends Controller
                 ->with('reviews:id,checkout_id,name,description,stars')
                 ->where('checkout_hash', $checkoutHash)
                 ->where('is_deleted', 0)
-                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style', 'is_active_contact_and_documents_fields', 'is_active_address_fields', 'back_redirect_url', 'elements_color', 'text', 'text_display', 'text_font_color', 'text_bg_color', 'fixed_values_fields')
+                ->select('id', 'checkout_hash', 'checkout_title', 'order_bump_title', 'background_color', 'product_offering_id', 'banner_id', 'timer_id', 'banner_display', 'checkout_style', 'is_active_contact_and_documents_fields', 'is_active_address_fields', 'back_redirect_url', 'elements_color', 'text', 'text_display', 'text_font_color', 'text_bg_color', 'fixed_values_fields', 'warning_pix')
                 ->first();
 
             if (!$getCheckout) {
