@@ -69,4 +69,9 @@ class Checkout extends Model
     {
         return $this->hasMany(CheckoutReviews::class);
     }
+
+    public function freights(): HasMany
+    {
+        return $this->hasMany(CheckoutFreight::class);
+    }
 }

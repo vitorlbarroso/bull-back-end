@@ -69,7 +69,8 @@ class CheckoutService
                 'timer:id,is_fixed,countdown,display,end_timer_title,timer_title,timer_title_color,timer_bg_color,timer_icon_color,timer_progressbar_bg_color,timer_progressbar_color',
                 'order_bumps.offer:id,offer_name,fake_price,price,product_id',
                 'order_bumps.offer.product.media:id,s3_url',
-                'reviews:id,checkout_id,name,description,stars'
+                'reviews:id,checkout_id,name,description,stars',
+                'freights:id,checkout_id,title,amount'
             ])
                 ->where('checkout_hash', $hashIdentifier)
                 ->where('is_deleted', 0)
@@ -126,6 +127,13 @@ class CheckoutService
                     'fake_price' => $orderBump->offer->fake_price,
                     'price' => $orderBump->offer->price,
                     's3_url' => $orderBump->offer->product->media->s3_url ?? null
+                ];
+            }),
+            'freights' => $checkout->freights->map(function($freight)  {
+                return [
+                    'id' => $freight->id,
+                    'title' => $freight->title,
+                    'amount' => $freight->amount,
                 ];
             }),
             'timer' => [

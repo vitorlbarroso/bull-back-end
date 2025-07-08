@@ -6,6 +6,7 @@ use App\Http\Controllers\OrderBumpController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductOfferingController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CheckoutFreightController;
 use App\Http\Controllers\CelCashController;
 use App\Http\Controllers\UserBankAccountController;
 use App\Http\Controllers\UserController;
@@ -67,10 +68,12 @@ Route::prefix('checkouts')->group(function() {
         Route::get('/order_bumps_to_checkout/{hashIdentifier}', [CheckoutController::class, 'order_bumps_to_checkout']);
         Route::post('/', [CheckoutController::class, 'store']);
         Route::post('/add_review', [CheckoutController::class, 'add_review']);
+        Route::post('/add_freight', [CheckoutFreightController::class, 'store']);
         Route::put('/{id}', [CheckoutController::class, 'update']);
         Route::put('/active_checkout/{checkout_id}', [CheckoutController::class, 'active_checkout']);
         Route::delete('/remove_review/{reviewId}', [CheckoutController::class, 'remove_review']);
         Route::delete('/{id}', [CheckoutController::class, 'destroy']);
+        Route::delete('/remove_freight/{freight_id}', [CheckoutFreightController::class, 'destroy']);
     });
 });
 
