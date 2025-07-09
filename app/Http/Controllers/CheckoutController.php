@@ -249,6 +249,7 @@ class CheckoutController extends Controller
                     })
                     ->select('id', 'products_offerings_id', 'checkout_id');
                 })
+                ->with('freights:id,checkout_id,title,amount')
                 ->with('reviews:id,checkout_id,name,description,stars')
                 ->where('checkout_hash', $checkoutHash)
                 ->where('is_deleted', 0)

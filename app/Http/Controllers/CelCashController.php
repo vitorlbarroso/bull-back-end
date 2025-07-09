@@ -12,6 +12,7 @@ use App\Http\Requests\CelCashGateway\GeneratePaymentPixRequest;
 use App\Mail\Sales\GeneratePixMail;
 use App\Models\CelcashCreateAccountsErrors;
 use App\Models\CelcashPayments;
+use App\Models\CheckoutFreight;
 use App\Models\CelcashPaymentsGatewayData;
 use App\Models\CelcashPaymentsOffers;
 use App\Models\CelcashPaymentsPixData;
@@ -280,6 +281,14 @@ class CelCashController extends Controller
             }
 
             $totalPrice = $request->personalized_amount * 100;
+        }
+
+        if ($request->freight_id) {
+            $getFreight = CheckoutFreight::find($request->freight_id);
+
+            if ($getFreight) {
+                $totalPrice += ($getFreight->amount * 100);
+            }
         }
 
         $calculateTax = CelCashService::calculateTax('pix', $getPrincipalOffer->product->user->id, $totalPrice);
