@@ -13,6 +13,7 @@ class CheckoutFreight extends Model
     protected $fillable = [
         'checkout_id',
         'title',
+        'description',
         'amount',
     ];
 

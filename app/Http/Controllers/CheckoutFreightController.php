@@ -15,6 +15,7 @@ class CheckoutFreightController extends Controller
         $validated = $request->validate([
             'checkout_id' => 'required',
             'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
         ]);
 

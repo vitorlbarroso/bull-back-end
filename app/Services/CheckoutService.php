@@ -70,7 +70,7 @@ class CheckoutService
                 'order_bumps.offer:id,offer_name,fake_price,price,product_id',
                 'order_bumps.offer.product.media:id,s3_url',
                 'reviews:id,checkout_id,name,description,stars',
-                'freights:id,checkout_id,title,amount'
+                'freights:id,checkout_id,title,amount,description'
             ])
                 ->where('checkout_hash', $hashIdentifier)
                 ->where('is_deleted', 0)
