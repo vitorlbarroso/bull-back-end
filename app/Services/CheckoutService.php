@@ -134,6 +134,7 @@ class CheckoutService
                     'id' => $freight->id,
                     'title' => $freight->title,
                     'amount' => $freight->amount,
+                    'description' => $freight->description,
                 ];
             }),
             'timer' => [
