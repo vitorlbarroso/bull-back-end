@@ -246,7 +246,7 @@ class CelCashController extends Controller
 
         $offersData[] = [
             "id" => $getPrincipalOffer->id,
-            "price" => round($getPrincipalOffer->price * 100),
+            "price" => $validatedData['quantity'] ? round(($getPrincipalOffer->price * 100) * $validatedData['quantity']) : round($getPrincipalOffer->price * 100),
             "type" => 'principal'
         ];
 
