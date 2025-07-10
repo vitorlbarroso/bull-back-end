@@ -54,6 +54,10 @@ class WithdrawalRequestsController extends Controller
 
         $user = Auth::user();
 
+        if (!$user->active_withdrawals) {
+            return Responses::ERROR('Os saques não estão habilitados para a sua conta!', null, 1100, 400);
+        }
+
         $createWithdrawalRequest = null;
 
         $withdrawalRequestId = null;

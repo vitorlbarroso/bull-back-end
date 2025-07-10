@@ -48,6 +48,7 @@ class User extends Authenticatable
         'auto_withdrawal',
         'min_product_ticket',
         'max_product_ticket',
+        'active_withdrawals',
     ];
 
     /**
