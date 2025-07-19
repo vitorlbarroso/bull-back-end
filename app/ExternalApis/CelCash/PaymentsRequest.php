@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Models\RapdynTokens;
 
 class PaymentsRequest
 {
@@ -123,6 +124,74 @@ class PaymentsRequest
                     ]
                 ];
             }
+
+            return $response;
+        }
+        catch (\Exception $e) {
+            Log::error('Erro ao tentar gerar pagamento pix na adquirente: ' . $e->getMessage());
+
+            return [
+                'error' => [
+                    'message' => "Erro ao gerar pagamento pix na adquirente",
+                    'errorMessage' => $e->getMessage(),
+                    'errorCode' => -1100
+                ]
+            ];
+        }
+    }
+
+    static public function generatePaymentPixRapdyn($data, $unicId)
+    {
+
+        $rapdynAuthToken = RapdynTokens::where('token_type', 'bearer')->first();
+
+        if (!$rapdynAuthToken) {
+            return [
+                'error' => [
+                    'message' => "Erro ao gerar pedido PIX na adquirente. Consultar tokens!",
+                    'errorMessage' => $rapdynAuthToken,
+                    'errorCode' => 1100
+                ]
+            ];
+        }
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $rapdynAuthToken->token_value,
+            'Content-Type' => 'application/json'
+        ];
+
+        $body = [
+            "amount" => $data['price'],
+            "method" => "pix",
+            "customer" => [
+                "name" => $data['customer']['name'],
+                "email" => $data['customer']['email'],
+                "phone" => "(84) 3848-6452",
+                "document" => [
+                    "value" => $data['customer']['document']['number'],
+                    "type" => "CPF",
+                ]
+            ],
+            "products" => [
+                [
+                    "name" => "Compra*BullsPay",
+                    "quantity" => 1,
+                    "price" => $data['price'],
+                    "type" => "digital",
+                ]
+            ]
+        ];
+
+        $baseUrl = env('RAPDYN_BASE_URL');
+
+        try {
+            $createPayment = Http::WithHeaders($headers)
+                ->post(
+                    $baseUrl . '/payments',
+                    $body
+                );
+
+            $response = $createPayment->json();
 
             return $response;
         }

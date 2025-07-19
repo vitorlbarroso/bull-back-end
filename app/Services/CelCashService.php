@@ -252,6 +252,7 @@ class CelCashService
 
         return $generatePayment;
     }
+
     static public function generatePaymentPixByZendry($data, $unicId)
     {
         $validator = Validator::make($data, [
@@ -287,6 +288,45 @@ class CelCashService
         $validated['token'] = $getToken;
 
         $generatePayment = PaymentsRequest::generatePaymentPixZendry($validated, $unicId);
+
+        return $generatePayment;
+    }
+    
+    static public function generatePaymentPixByRapdyn($data, $unicId)
+    {
+        $validator = Validator::make($data, [
+            'customer' => 'required|array',
+            'customer.name' => 'required|string',
+            'customer.email' => 'required|string',
+            'customer.document' => 'array',
+            'customer.document.number' => 'string',
+            'customer.document.type' => 'string',
+            'price' => 'required|numeric'
+        ]);
+
+        if ($validator->fails()) {
+            Log::error('Ocorreu um erro ao validar os itens recebidos no método: ' . $validator->errors(), );
+
+            return [
+                'error' => [
+                    'message' => "Itens insuficientes",
+                    'errors' => $validator->errors(),
+                    'errorCode' => 1100
+                ]
+            ];
+        }
+
+        $validated = $validator->validated();
+
+        /* Buscando token */
+        $getToken = self::getToken();
+
+        if ($getToken['error'])
+            return $getToken;
+
+        $validated['token'] = $getToken;
+
+        $generatePayment = PaymentsRequest::generatePaymentPixRapdyn($validated, $unicId);
 
         return $generatePayment;
     }
