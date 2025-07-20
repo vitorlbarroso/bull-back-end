@@ -158,6 +158,10 @@ Route::prefix('webhooks')->group(function() {
         Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_rapdyn']);
     });
 
+    Route::prefix('super')->group(function() {
+        Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_super']);
+    });
+
     Route::prefix('venit')->group(function() {
         Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_venit']);
     });

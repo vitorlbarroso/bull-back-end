@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\RapdynTokens;
+use App\Models\SuperCredentials;
 
 class PaymentsRequest
 {
@@ -183,6 +184,121 @@ class PaymentsRequest
         ];
 
         $baseUrl = env('RAPDYN_BASE_URL');
+
+        try {
+            $createPayment = Http::WithHeaders($headers)
+                ->post(
+                    $baseUrl . '/payments',
+                    $body
+                );
+
+            $response = $createPayment->json();
+
+            return $response;
+        }
+        catch (\Exception $e) {
+            Log::error('Erro ao tentar gerar pagamento pix na adquirente: ' . $e->getMessage());
+
+            return [
+                'error' => [
+                    'message' => "Erro ao gerar pagamento pix na adquirente",
+                    'errorMessage' => $e->getMessage(),
+                    'errorCode' => -1100
+                ]
+            ];
+        }
+    }
+
+    static public function getSuperToken()
+    {
+
+        $superAuthToken = SuperCredentials::where('credential_type', 'bearer')
+            ->where('updated_at', '>=', Carbon::now()->subMinutes(5))
+            ->first();
+
+        if (!$superAuthToken) {
+            $superPublicToken = SuperCredentials::where('credential_type', 'public_token')->first();
+            $superPrivateToken = SuperCredentials::where('credential_type', 'private_token')->first();
+
+            $baseUrl = env('SUPER_BASE_URL');
+
+            $headers = [
+                'Content-Type' => 'application/json'
+            ];
+
+            $body = [
+                'publicKey' => $superPublicToken->credential_value,
+                'privateKey' => $superPrivateToken->credential_value,
+            ];
+
+            try {
+                $createPayment = Http::WithHeaders($headers)
+                    ->post(
+                        $baseUrl . '/auth',
+                        $body
+                    );
+
+                $response = $createPayment->json();
+
+                $existsToken = SuperCredentials::where('credential_type', 'bearer')->first();
+
+                if (!$existsToken) {
+                    $createdToken = SuperCredentials::create([
+                        'credential_type' => 'bearer',
+                        'credential_value' => $response['data']['access_token'],
+                    ]);
+                } else {
+                    $existsToken->update([
+                        'credential_value' => $response['data']['access_token'],
+                    ]);
+                }
+
+                return $response['data']['access_token'];
+            }
+            catch (\Exception $e) {
+                Log::error('Erro ao tentar gerar token na adquirente: ' . $e->getMessage());
+
+                return [
+                    'error' => [
+                        'message' => "Erro ao gerar token na adquirente",
+                        'errorMessage' => $e->getMessage(),
+                        'errorCode' => -1100
+                    ]
+                ];
+            }
+        } else {
+            return $superAuthToken->credential_value;
+        }
+    }
+
+    static public function generatePaymentPixSuper($data, $unicId)
+    {
+        $superAuthToken = PaymentsRequest::getSuperToken();
+
+        if (isset($superAuthToken['error'])) {
+            return [
+                'error' => [
+                    'message' => "Erro ao gerar pedido PIX na adquirente. Consultar tokens!",
+                    'errorMessage' => $superAuthToken,
+                    'errorCode' => 1100
+                ]
+            ];
+        }
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $superAuthToken,
+            'Content-Type' => 'application/json'
+        ];
+
+        $body = [
+            "paymentType" => "pix",
+            "billingData" => [
+                "amount" => $data['price'],
+                "postbackUrl" => env('SUPER_WEBHOOKS_BASE_URL'),
+            ],
+        ];
+
+        $baseUrl = env('SUPER_BASE_URL');
 
         try {
             $createPayment = Http::WithHeaders($headers)
