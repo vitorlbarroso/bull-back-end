@@ -569,19 +569,19 @@ class CelcashWebhooksController extends Controller
                 $isPayedStatus = false;
             }
 
-            if (
+            /* if (
                 $validatedData['status'] == 'med'
             ) {
                 $status = 'chargeback';
                 $isPayedStatus = false;
-            }
+            } */
 
-            if (
+            /* if (
                 $validatedData['status'] == 'blocked'
             ) {
                 $status = 'chargeback';
                 $isPayedStatus = false;
-            }
+            } */
 
             if (
                 $validatedData['status'] == 'returned'
