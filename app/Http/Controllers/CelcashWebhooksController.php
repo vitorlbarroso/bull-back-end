@@ -217,7 +217,14 @@ class CelcashWebhooksController extends Controller
              * =============================================================
              */
 
-            $pendingEvents = PendingPixelEvents::where('payment_id',$validatedData['orderId'])
+            event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
+        } else {
+            $getTransaction->update([
+                'status' => $status
+            ]);
+        }
+
+        $pendingEvents = PendingPixelEvents::where('payment_id',$validatedData['orderId'])
                 ->where('status', 'Waiting Payment')
                 ->get();
 
@@ -294,13 +301,6 @@ class CelcashWebhooksController extends Controller
                     Log::error("Erro ao enviar Request para UTMIFY", ["erro" => $e->getMessage()]);
                 }
             }
-
-            event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
-        } else {
-            $getTransaction->update([
-                'status' => $status
-            ]);
-        }
 
         return Responses::SUCCESS('Status do transação atualizado com sucesso!', null, 200);
     }
@@ -418,7 +418,15 @@ class CelcashWebhooksController extends Controller
              * E INICIA AS AULAS COM O PROGRESSO ZERADO
              * =============================================================
              */
-            $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['message']['reference_code'])
+
+            event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
+        } else {
+            $getTransaction->update([
+                'status' => $status
+            ]);
+        }
+
+        $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['message']['reference_code'])
                 ->where('status', 'Waiting Payment')
                 ->get();
 
@@ -494,15 +502,6 @@ class CelcashWebhooksController extends Controller
                     Log::error("Erro ao enviar Request para UTMIFY", ["erro" => $e->getMessage()]);
                 }
             }
-
-
-
-            event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
-        } else {
-            $getTransaction->update([
-                'status' => $status
-            ]);
-        }
 
         try {
             $notificationResponse = Http::withHeaders([
@@ -650,7 +649,15 @@ class CelcashWebhooksController extends Controller
              * E INICIA AS AULAS COM O PROGRESSO ZERADO
              * =============================================================
              */
-            $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['id'])
+            
+            event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
+        } else {
+            $getTransaction->update([
+                'status' => $status
+            ]);
+        }
+
+        $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['id'])
                 ->where('status', 'Waiting Payment')
                 ->get();
 
@@ -726,15 +733,6 @@ class CelcashWebhooksController extends Controller
                     Log::error("Erro ao enviar Request para UTMIFY", ["erro" => $e->getMessage()]);
                 }
             }
-
-
-
-            event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
-        } else {
-            $getTransaction->update([
-                'status' => $status
-            ]);
-        }
 
         try {
             $notificationResponse = Http::withHeaders([
@@ -803,12 +801,12 @@ class CelcashWebhooksController extends Controller
                 $isPayedStatus = false;
             }
 
-            if (
+            /* if (
                 $validatedData['data']['status'] == 'CHARGEBACK'
             ) {
                 $status = 'chargeback';
                 $isPayedStatus = false;
-            }
+            } */
 
             if (
                 $validatedData['data']['status'] == 'REFUNDED'
@@ -876,90 +874,89 @@ class CelcashWebhooksController extends Controller
              * E INICIA AS AULAS COM O PROGRESSO ZERADO
              * =============================================================
              */
-            $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['data']['id'])
-                ->where('status', 'Waiting Payment')
-                ->get();
-
-            if($pendingEvents->isNotEmpty()  ) {
-                foreach ($pendingEvents as $event) {
-                    try {
-                        $pixel_data=PixelEventService::FormatDataPixel($event->payload);
-                        Log::info("Colocando na fila o evento para disparar o pixel Via Confirmacao de Pagamento", ["pixel" => $pixel_data]);
-                        // Envia evento de conversão
-                        event(new PixelEvent($event->offer_id, $event->event_name, $pixel_data, $request->header('x-transaction-id')));
-                        // Marca o evento como enviado
-                        $event->update(['status' => 'sent']);
-                    } catch (\Exception $e) {
-                        // Se falhar, pode logar o erro e tentar novamente depois
-                        $event->update(['status' => 'failed']);
-                    }
-                }
-            }
-            if($getTransaction->payment_offers[0]->offer->utmify_token) {
-                try {
-                    $body = [
-                        "orderId" => $validatedData['id'],
-                        "platform" => "BullsPay",
-                        "paymentMethod" => "pix",
-                        "status" => "paid",
-                        "createdAt" => $getTransaction->created_at,
-                        "approvedDate" => $getTransaction->updated_at,
-                        "refundedAt" => null,
-                        "customer" => [
-                            "name" => $getTransaction->buyer_name,
-                            "email" => $getTransaction->buyer_email,
-                            "phone" => null,
-                            "document" => $getTransaction->buyer_document_cpf,
-                            "country" => "BR",
-                            "IP" =>null
-                        ],
-                        "products" =>[
-                            [
-                                "id" => $getTransaction->galax_pay_id,
-                                "name" => $getTransaction->payment_offers[0]->offer->product->product_name,
-                                "planId" => null,
-                                "planName" => null,
-                                "quantity" => 1,
-                                "priceInCents" => $getTransaction->payment_offers[0]->offer->price * 100
-                            ]
-                        ],
-                        "trackingParameters" => [
-                            "src" => $getTransaction->src,
-                            "sck"=>  $getTransaction->sck,
-                            "utm_source"=>  $getTransaction->utm_source,
-                            "utm_campaign"=> $getTransaction->utm_campaign,
-                            "utm_medium"=> $getTransaction->utm_medium,
-                            "utm_content"=> $getTransaction->utm_content,
-                            "utm_term"=> $getTransaction->utm_term,
-                        ],
-                        "commission" => [
-                            "totalPriceInCents" => $getTransaction->total_value,
-                            "gatewayFeeInCents" => $getTransaction->value_to_platform,
-                            "userCommissionInCents" => $getTransaction->value_to_receiver
-                        ],
-                        "isTest" => false
-                    ];
-                    $headers = [
-                        'x-api-token' => $getTransaction->payment_offers[0]->offer->utmify_token
-                    ];
-                    $utmify =Http::WithHeaders($headers)
-                        ->post(
-                            'https://api.utmify.com.br/api-credentials/orders',
-                            $body
-                        );
-                    Log::info("Evento enviado ao UTMIFY ", ["Response" => $utmify]);
-                 } catch (\Exception $e) {
-                    Log::error("Erro ao enviar Request para UTMIFY", ["erro" => $e->getMessage()]);
-                }
-            }
-
-
 
             event(new CoursePurchased($buyerUser->id, $getTransaction->galax_pay_id));
         } else {
             $getTransaction->update([
                 'status' => $status
             ]);
+        }
+
+        $pendingEvents = PendingPixelEvents::where('payment_id', $validatedData['data']['id'])
+            ->where('status', 'Waiting Payment')
+            ->get();
+
+        if($pendingEvents->isNotEmpty()  ) {
+            foreach ($pendingEvents as $event) {
+                try {
+                    $pixel_data=PixelEventService::FormatDataPixel($event->payload);
+                    Log::info("Colocando na fila o evento para disparar o pixel Via Confirmacao de Pagamento", ["pixel" => $pixel_data]);
+                    // Envia evento de conversão
+                    event(new PixelEvent($event->offer_id, $event->event_name, $pixel_data, $request->header('x-transaction-id')));
+                    // Marca o evento como enviado
+                    $event->update(['status' => 'sent']);
+                } catch (\Exception $e) {
+                    // Se falhar, pode logar o erro e tentar novamente depois
+                    $event->update(['status' => 'failed']);
+                }
+            }
+        }
+        if($getTransaction->payment_offers[0]->offer->utmify_token) {
+            try {
+                $body = [
+                    "orderId" => $validatedData['id'],
+                    "platform" => "BullsPay",
+                    "paymentMethod" => "pix",
+                    "status" => "paid",
+                    "createdAt" => $getTransaction->created_at,
+                    "approvedDate" => $getTransaction->updated_at,
+                    "refundedAt" => null,
+                    "customer" => [
+                        "name" => $getTransaction->buyer_name,
+                        "email" => $getTransaction->buyer_email,
+                        "phone" => null,
+                        "document" => $getTransaction->buyer_document_cpf,
+                        "country" => "BR",
+                        "IP" =>null
+                    ],
+                    "products" =>[
+                        [
+                            "id" => $getTransaction->galax_pay_id,
+                            "name" => $getTransaction->payment_offers[0]->offer->product->product_name,
+                            "planId" => null,
+                            "planName" => null,
+                            "quantity" => 1,
+                            "priceInCents" => $getTransaction->payment_offers[0]->offer->price * 100
+                        ]
+                    ],
+                    "trackingParameters" => [
+                        "src" => $getTransaction->src,
+                        "sck"=>  $getTransaction->sck,
+                        "utm_source"=>  $getTransaction->utm_source,
+                        "utm_campaign"=> $getTransaction->utm_campaign,
+                        "utm_medium"=> $getTransaction->utm_medium,
+                        "utm_content"=> $getTransaction->utm_content,
+                        "utm_term"=> $getTransaction->utm_term,
+                    ],
+                    "commission" => [
+                        "totalPriceInCents" => $getTransaction->total_value,
+                        "gatewayFeeInCents" => $getTransaction->value_to_platform,
+                        "userCommissionInCents" => $getTransaction->value_to_receiver
+                    ],
+                    "isTest" => false
+                ];
+                $headers = [
+                    'x-api-token' => $getTransaction->payment_offers[0]->offer->utmify_token
+                ];
+                $utmify =Http::WithHeaders($headers)
+                    ->post(
+                        'https://api.utmify.com.br/api-credentials/orders',
+                        $body
+                    );
+                Log::info("Evento enviado ao UTMIFY ", ["Response" => $utmify]);
+                } catch (\Exception $e) {
+                Log::error("Erro ao enviar Request para UTMIFY", ["erro" => $e->getMessage()]);
+            }
         }
 
         try {

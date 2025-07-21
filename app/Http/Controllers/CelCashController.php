@@ -310,7 +310,7 @@ class CelCashController extends Controller
                     'type' => 'cpf'
                 ]
             ],
-            'price' => $totalPrice
+            'price' => (int) ceil($totalPrice)
         ];
 
         if ($getPrincipalOffer->product->user->cash_in_adquirer_name == 'reflow' || $getPrincipalOffer->product->user->cash_in_adquirer_name == null) {
