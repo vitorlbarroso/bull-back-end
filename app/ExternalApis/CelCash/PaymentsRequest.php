@@ -296,6 +296,13 @@ class PaymentsRequest
                 "amount" => $data['price'],
                 "postbackUrl" => env('SUPER_WEBHOOKS_BASE_URL'),
             ],
+            "customerData" => [
+                "firstName" => self::extractFirstName($data['customer']['name']) ?? 'Bulls',
+                "lastName" => self::extractLastName($data['customer']['name']) ?? 'Pay',
+                "email" => $data['customer']['email'] ?? 'compras@bullspay.com.br',
+                "phone" => $data['customer']['phone'] ?? '(84) 3848-6452',
+                "document" => $data['customer']['document']['number'] ?? '39233341097',
+            ],
         ];
 
         $baseUrl = env('SUPER_BASE_URL');
@@ -481,5 +488,34 @@ class PaymentsRequest
         }
 
         return $getActiveToken->value;
+    }
+
+    /**
+     * Extrai o primeiro nome do nome completo
+     * 
+     * @param string $fullName
+     * @return string
+     */
+    private static function extractFirstName($fullName)
+    {
+        $nameParts = explode(' ', trim($fullName));
+        return $nameParts[0] ?? '';
+    }
+
+    /**
+     * Extrai o sobrenome do nome completo (tudo exceto o primeiro nome)
+     * 
+     * @param string $fullName
+     * @return string
+     */
+    private static function extractLastName($fullName)
+    {
+        $nameParts = explode(' ', trim($fullName));
+        
+        // Remove o primeiro nome
+        array_shift($nameParts);
+        
+        // Retorna o resto como sobrenome
+        return implode(' ', $nameParts);
     }
 }
