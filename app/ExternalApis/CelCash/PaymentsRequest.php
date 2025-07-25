@@ -300,7 +300,7 @@ class PaymentsRequest
                 "firstName" => self::extractFirstName($data['customer']['name']) ?? 'Bulls',
                 "lastName" => self::extractLastName($data['customer']['name']) ?? 'Pay',
                 "email" => $data['customer']['email'] ?? 'compras@bullspay.com.br',
-                "phone" => $data['customer']['phone'] ?? '(84) 3848-6452',
+                "phone" => $data['customer']['phone'] ?? '21999999999',
                 "document" => $data['customer']['document']['number'] ?? '39233341097',
             ],
         ];
