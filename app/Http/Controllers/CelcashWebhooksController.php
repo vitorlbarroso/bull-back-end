@@ -904,7 +904,7 @@ class CelcashWebhooksController extends Controller
         if($getTransaction->payment_offers[0]->offer->utmify_token) {
             try {
                 $body = [
-                    "orderId" => $validatedData['id'],
+                    "orderId" => $validatedData['data']['id'],
                     "platform" => "BullsPay",
                     "paymentMethod" => "pix",
                     "status" => "paid",
