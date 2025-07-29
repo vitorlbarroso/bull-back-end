@@ -959,7 +959,7 @@ class CelcashWebhooksController extends Controller
             }
         }
 
-        try {
+        /* try {
             $notificationResponse = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer KAWSGjngsnasoNBI320933'
@@ -977,7 +977,7 @@ class CelcashWebhooksController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Erro ao enviar notificação: ' . $e->getMessage());
-        }
+        } */
 
         return Responses::SUCCESS('Status do transação atualizado com sucesso!', null, 200);
     }
