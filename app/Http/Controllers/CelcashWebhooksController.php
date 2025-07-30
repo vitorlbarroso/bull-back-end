@@ -862,7 +862,7 @@ class CelcashWebhooksController extends Controller
             ]);
 
             try {
-                Mail::to($buyerUser->email)->send(new BuyerMail($buyerUser->name, $buyerUser->email, $getTransaction->payment_offers[0]->offer->product->email_support, $validatedData['id']));
+                Mail::to($buyerUser->email)->send(new BuyerMail($buyerUser->name, $buyerUser->email, $getTransaction->payment_offers[0]->offer->product->email_support, $validatedData['data']['id']));
             }
             catch (\Exception $e) {
                 Log::error("|" . request()->header('x-transaction-id') . '| Ocorreu um erro ao tentar enviar um e-mail de pagamento |', [ 'ERRO' => $e->getMessage()]);
@@ -901,7 +901,10 @@ class CelcashWebhooksController extends Controller
                 }
             }
         }
+
+        Log::info("| Validando se o evento será enviado para a UTMIFY | ", ['UTMIFY TOKEN' => $getTransaction->payment_offers[0]->offer->utmify_token]);
         if($getTransaction->payment_offers[0]->offer->utmify_token) {
+            Log::info("| Evento será enviado para a UTMIFY | ", ['UTMIFY TOKEN' => $getTransaction->payment_offers[0]->offer->utmify_token]);
             try {
                 $body = [
                     "orderId" => $validatedData['data']['id'],
@@ -959,7 +962,7 @@ class CelcashWebhooksController extends Controller
             }
         }
 
-        /* try {
+        try {
             $notificationResponse = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer KAWSGjngsnasoNBI320933'
@@ -977,7 +980,7 @@ class CelcashWebhooksController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Erro ao enviar notificação: ' . $e->getMessage());
-        } */
+        }
 
         return Responses::SUCCESS('Status do transação atualizado com sucesso!', null, 200);
     }

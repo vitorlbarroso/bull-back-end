@@ -564,7 +564,7 @@ class CelCashController extends Controller
         }
 
         // Enviando notificação
-        /* try {
+        try {
             $notificationResponse = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer KAWSGjngsnasoNBI320933'
@@ -582,7 +582,7 @@ class CelCashController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Erro ao enviar notificação: ' . $e->getMessage());
-        } */
+        }
 
         try {
             Mail::to($validatedData['customer_email'])->send(new GeneratePixMail($validatedData['customer_name'], $pixReference, $getPrincipalOffer->product->email_support, ($totalPrice / 100), $unicId));
