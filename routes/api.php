@@ -162,6 +162,10 @@ Route::prefix('webhooks')->group(function() {
         Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_super']);
     });
 
+    Route::prefix('owen')->group(function() {
+        Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_owen']);
+    });
+
     Route::prefix('venit')->group(function() {
         Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_venit']);
     });
