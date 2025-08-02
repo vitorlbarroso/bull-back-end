@@ -361,6 +361,37 @@ class CelCashService
 
         return $generatePayment;
     }
+    
+    static public function generatePaymentPixByOwen($data, $unicId)
+    {
+        $validator = Validator::make($data, [
+            'customer' => 'required|array',
+            'customer.name' => 'required|string',
+            'customer.email' => 'required|string',
+            'customer.document' => 'array',
+            'customer.document.number' => 'string',
+            'customer.document.type' => 'string',
+            'price' => 'required|numeric'
+        ]);
+
+        if ($validator->fails()) {
+            Log::error('Ocorreu um erro ao validar os itens recebidos no método: ' . $validator->errors(), );
+
+            return [
+                'error' => [
+                    'message' => "Itens insuficientes",
+                    'errors' => $validator->errors(),
+                    'errorCode' => 1100
+                ]
+            ];
+        }
+
+        $validated = $validator->validated();
+
+        $generatePayment = PaymentsRequest::generatePaymentPixOwen($validated, $unicId);
+
+        return $generatePayment;
+    }
 
     static public function generatePaymentPixByVenit($data, $unicId)
     {

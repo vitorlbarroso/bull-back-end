@@ -271,6 +271,121 @@ class PaymentsRequest
         }
     }
 
+    static public function getOwenToken()
+    {
+        $cert = env('OWEN_CERT');
+        $key = env('OWEN_KEY');
+
+        try {
+            // Criar arquivos temporários para os certificados
+            $tempKeyFile = tempnam(sys_get_temp_dir(), 'owen_key_');
+            $tempCertFile = tempnam(sys_get_temp_dir(), 'owen_cert_');
+            
+            // Escrever os certificados nos arquivos temporários
+            file_put_contents($tempKeyFile, $key);
+            file_put_contents($tempCertFile, $cert);
+            
+            // Configuração do cURL para mTLS
+            $ch = curl_init();
+            
+            // URL da API Owen - Endpoint de autenticação
+            $apiUrl = env('OWEN_BASE_URL') . "/v1/auth/login";
+            
+            // Payload para autenticação
+            $payload = [
+                'email' => env('OWEN_CONTACT_M'),
+                'password' => env('OWEN_S')
+            ];
+            
+            // Configurações do cURL
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $apiUrl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'Accept: application/json'
+                ],
+                // Configurações para mTLS
+                CURLOPT_SSLCERT => $tempCertFile,     // Certificado do cliente
+                CURLOPT_SSLKEY => $tempKeyFile,        // Chave privada do cliente
+                CURLOPT_SSL_VERIFYPEER => false,       // Equivalente ao rejectUnauthorized: false
+                CURLOPT_SSL_VERIFYHOST => false,       // Não verificar o hostname
+                CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_2, // Força TLS 1.2
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_CONNECTTIMEOUT => 10,
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            
+            curl_close($ch);
+            
+            // Limpar arquivos temporários
+            unlink($tempKeyFile);
+            unlink($tempCertFile);
+            
+            if ($error) {
+                Log::error('Erro cURL na requisição Owen: ' . $error);
+                return [
+                    'error' => [
+                        'message' => "Erro na conexão com a API Owen",
+                        'errorMessage' => $error,
+                        'errorCode' => -1100
+                    ]
+                ];
+            }
+            
+            if ($httpCode !== 200) {
+                Log::error('Erro HTTP na requisição Owen. Status: ' . $httpCode . ', Response: ' . $response);
+                return [
+                    'error' => [
+                        'message' => "Erro na resposta da API Owen",
+                        'errorMessage' => "HTTP Status: " . $httpCode . ", Response: " . $response,
+                        'errorCode' => -1100
+                    ]
+                ];
+            }
+            
+            $responseData = json_decode($response, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::error('Erro ao decodificar JSON da resposta Owen: ' . json_last_error_msg());
+                return [
+                    'error' => [
+                        'message' => "Erro ao processar resposta da API Owen",
+                        'errorMessage' => json_last_error_msg(),
+                        'errorCode' => -1100
+                    ]
+                ];
+            }
+            
+            Log::info('Autenticação Owen realizada com sucesso');
+            return $responseData['data']['idToken'];
+            
+        } catch (\Exception $e) {
+            // Garantir que os arquivos temporários sejam removidos mesmo em caso de erro
+            if (isset($tempKeyFile) && file_exists($tempKeyFile)) {
+                unlink($tempKeyFile);
+            }
+            if (isset($tempCertFile) && file_exists($tempCertFile)) {
+                unlink($tempCertFile);
+            }
+            
+            Log::error('Erro ao tentar obter token Owen: ' . $e->getMessage());
+            
+            return [
+                'error' => [
+                    'message' => "Erro ao obter token Owen",
+                    'errorMessage' => $e->getMessage(),
+                    'errorCode' => -1100
+                ]
+            ];
+        }
+    }
+
     static public function generatePaymentPixSuper($data, $unicId)
     {
         $superAuthToken = PaymentsRequest::getSuperToken();
@@ -319,6 +434,167 @@ class PaymentsRequest
             return $response;
         }
         catch (\Exception $e) {
+            Log::error('Erro ao tentar gerar pagamento pix na adquirente: ' . $e->getMessage());
+
+            return [
+                'error' => [
+                    'message' => "Erro ao gerar pagamento pix na adquirente",
+                    'errorMessage' => $e->getMessage(),
+                    'errorCode' => -1100
+                ]
+            ];
+        }
+    }
+
+    static public function generatePaymentPixOwen($data, $unicId)
+    {
+        $owenAuthToken = PaymentsRequest::getOwenToken();
+
+        if (isset($owenAuthToken['error'])) {
+            return [
+                'error' => [
+                    'message' => "Erro ao gerar pedido PIX na adquirente. Consultar tokens!",
+                    'errorMessage' => $owenAuthToken,
+                    'errorCode' => 1100
+                ]
+            ];
+        }
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $owenAuthToken,
+            'Content-Type' => 'application/json'
+        ];
+
+        $body = [
+            "transactionType" => "api",
+            "externalReference" => $unicId,
+            "postbackUrl" => env('OWEN_WEBHOOKS_BASE_URL'),
+            "buyer" => [
+                "id" => $unicId,
+                "name" => $data['customer']['name'] ?? 'Bulls Pay',
+                "email" => $data['customer']['email'] ?? 'compras@bullspay.com.br',
+                "docNumber" => $data['customer']['document']['number'] ?? '39233341097',
+                "phone" => $data['customer']['phone'] ?? '21999999999',
+                "address" => [
+                    "street" => "Rua dos Belos",
+                    "number" => "123",
+                    "city" => "São Paulo",
+                    "state" => "SP",
+                    "postalCode" => "04101300",
+                    "country" => "BR",
+                ]
+            ],
+            "product" => [
+                [
+                    "name" => "Produto Bulls Pay",
+                    "description" => "Compra digital - Produto Bulls Pay",
+                    "quantity" => 1,
+                    "productPrice" => $data['price'],
+                    "type" => "digital",
+                ]
+            ],
+            "payment" => [
+                "type" => "pix"
+            ]
+        ];
+
+        $baseUrl = env('OWEN_API_BASE_URL');
+        $cert = env('OWEN_CERT');
+        $key = env('OWEN_KEY');
+
+        try {
+            // Criar arquivos temporários para os certificados
+            $tempKeyFile = tempnam(sys_get_temp_dir(), 'owen_key_');
+            $tempCertFile = tempnam(sys_get_temp_dir(), 'owen_cert_');
+            
+            // Escrever os certificados nos arquivos temporários
+            file_put_contents($tempKeyFile, $key);
+            file_put_contents($tempCertFile, $cert);
+            
+            // Configuração do cURL para mTLS
+            $ch = curl_init();
+            
+            // URL da API Owen
+            $apiUrl = $baseUrl . '/v1/transactions';
+            
+            // Configurações do cURL
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $apiUrl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($body),
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: Bearer ' . $owenAuthToken,
+                    'Content-Type: application/json',
+                    'Accept: application/json'
+                ],
+                // Configurações para mTLS
+                CURLOPT_SSLCERT => $tempCertFile,     // Certificado do cliente
+                CURLOPT_SSLKEY => $tempKeyFile,        // Chave privada do cliente
+                CURLOPT_SSL_VERIFYPEER => false,       // Equivalente ao rejectUnauthorized: false
+                CURLOPT_SSL_VERIFYHOST => false,       // Não verificar o hostname
+                CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_2, // Força TLS 1.2
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_CONNECTTIMEOUT => 10,
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            
+            curl_close($ch);
+            
+            // Limpar arquivos temporários
+            unlink($tempKeyFile);
+            unlink($tempCertFile);
+            
+            if ($error) {
+                Log::error('Erro cURL na requisição Owen PIX: ' . $error);
+                return [
+                    'error' => [
+                        'message' => "Erro na conexão com a API Owen",
+                        'errorMessage' => $error,
+                        'errorCode' => -1100
+                    ]
+                ];
+            }
+            
+            if ($httpCode !== 200 && $httpCode !== 201) {
+                Log::error('Erro HTTP na requisição Owen PIX. Status: ' . $httpCode . ', Response: ' . $response);
+                return [
+                    'error' => [
+                        'message' => "Erro na resposta da API Owen",
+                        'errorMessage' => "HTTP Status: " . $httpCode . ", Response: " . $response,
+                        'errorCode' => -1100
+                    ]
+                ];
+            }
+            
+            $responseData = json_decode($response, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::error('Erro ao decodificar JSON da resposta Owen PIX: ' . json_last_error_msg());
+                return [
+                    'error' => [
+                        'message' => "Erro ao processar resposta da API Owen",
+                        'errorMessage' => json_last_error_msg(),
+                        'errorCode' => -1100
+                    ]
+                ];
+            }
+            
+            Log::info('Pagamento PIX Owen gerado com sucesso');
+            return $responseData;
+            
+        } catch (\Exception $e) {
+            // Garantir que os arquivos temporários sejam removidos mesmo em caso de erro
+            if (isset($tempKeyFile) && file_exists($tempKeyFile)) {
+                unlink($tempKeyFile);
+            }
+            if (isset($tempCertFile) && file_exists($tempCertFile)) {
+                unlink($tempCertFile);
+            }
+            
             Log::error('Erro ao tentar gerar pagamento pix na adquirente: ' . $e->getMessage());
 
             return [
