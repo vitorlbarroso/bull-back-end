@@ -244,6 +244,10 @@ class CelCashController extends Controller
 
         $offersData = [];
 
+        if (!isset($validatedData['quantity'])) {
+            $validatedData['quantity'] = 1;
+        }
+
         $offersData[] = [
             "id" => $getPrincipalOffer->id,
             "price" => $validatedData['quantity'] ? round(($getPrincipalOffer->price * 100) * $validatedData['quantity']) : round($getPrincipalOffer->price * 100),
@@ -306,7 +310,7 @@ class CelCashController extends Controller
                     'type' => 'cpf'
                 ]
             ],
-            'price' => $totalPrice
+            'price' => (int) ceil($totalPrice)
         ];
 
         if ($getPrincipalOffer->product->user->cash_in_adquirer_name == 'reflow' || $getPrincipalOffer->product->user->cash_in_adquirer_name == null) {
@@ -339,6 +343,75 @@ class CelCashController extends Controller
                     'qr_code' => $generatePayment['qrcode']['content'],
                     'upsell' => $getPrincipalOffer->sale_completed_page_url
                 ];
+            }
+        }
+
+        if ($getPrincipalOffer->product->user->cash_in_adquirer_name == 'rapdyn') {
+            $unicId = "BP_ID_" . Str::upper(Str::random(30));
+
+            $data['customer']['document']['number'] == '00000000000' ? $data['customer']['document']['number'] = '39233341097' : null;
+
+            $generatePayment = CelCashService::generatePaymentPixByRapdyn($data, $unicId);
+
+            if (isset($generatePayment['id'])) {
+                $unicId = $generatePayment['id'];
+                $pixReference = $generatePayment['pix']['copypaste'];
+
+                $adquirerName = 'rapdyn';
+
+                $returnData = [
+                    'galax_pay_id' => $generatePayment['id'],
+                    'qr_code' => $generatePayment['pix']['copypaste'],
+                    'upsell' => $getPrincipalOffer->sale_completed_page_url
+                ];
+            } else {
+                return Responses::ERROR('Ocorreu um erro ao gerar o pedido!', $generatePayment, 1400, 400);
+            }
+        }
+
+        if ($getPrincipalOffer->product->user->cash_in_adquirer_name == 'owen') {
+            $unicId = "BP_ID_" . Str::upper(Str::random(30));
+
+            $data['customer']['document']['number'] == '00000000000' ? $data['customer']['document']['number'] = '39233341097' : null;
+
+            $generatePayment = CelCashService::generatePaymentPixByOwen($data, $unicId);
+
+            if (isset($generatePayment['data']['id'])) {
+                $unicId = $generatePayment['data']['id'];
+                $pixReference = $generatePayment['data']['payment']['pix']['emv'];
+
+                $adquirerName = 'owen';
+
+                $returnData = [
+                    'galax_pay_id' => $generatePayment['data']['id'],
+                    'qr_code' => $generatePayment['data']['payment']['pix']['emv'],
+                    'upsell' => $getPrincipalOffer->sale_completed_page_url
+                ];
+            } else {
+                return Responses::ERROR('Ocorreu um erro ao gerar o pedido!', $generatePayment, 1400, 400);
+            }
+        }
+
+        if ($getPrincipalOffer->product->user->cash_in_adquirer_name == 'super') {
+            $unicId = "BP_ID_" . Str::upper(Str::random(30));
+
+            $data['customer']['document']['number'] == '00000000000' ? $data['customer']['document']['number'] = '39233341097' : null;
+
+            $generatePayment = CelCashService::generatePaymentPixBySuper($data, $unicId);
+
+            if (isset($generatePayment['data']['id'])) {
+                $unicId = $generatePayment['data']['id'];
+                $pixReference = $generatePayment['data']['pixDetail']['emv'];
+
+                $adquirerName = 'super';
+
+                $returnData = [
+                    'galax_pay_id' => $generatePayment['data']['id'],
+                    'qr_code' => $generatePayment['data']['pixDetail']['emv'],
+                    'upsell' => $getPrincipalOffer->sale_completed_page_url
+                ];
+            } else {
+                return Responses::ERROR('Ocorreu um erro ao gerar o pedido!', $generatePayment, 1400, 400);
             }
         }
 

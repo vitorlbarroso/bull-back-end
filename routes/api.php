@@ -153,6 +153,19 @@ Route::prefix('webhooks')->group(function() {
     Route::prefix('zendry')->group(function() {
         Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_zendry']);
     });
+
+    Route::prefix('rapdyn')->group(function() {
+        Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_rapdyn']);
+    });
+
+    Route::prefix('super')->group(function() {
+        Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_super']);
+    });
+
+    Route::prefix('owen')->group(function() {
+        Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_owen']);
+    });
+
     Route::prefix('venit')->group(function() {
         Route::post('/transactions', [CelcashWebhooksController::class, 'transactions_venit']);
     });
