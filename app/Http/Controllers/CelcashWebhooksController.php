@@ -135,14 +135,14 @@ class CelcashWebhooksController extends Controller
                 $isPayedStatus = false;
             }
 
-            if (
+            /* if (
                 $validatedData['status'] == 'refund_requested' ||
                 $validatedData['status'] == 'refund_in_progress' ||
                 $validatedData['status'] == 'refunded'
             ) {
                 $status = 'refunded';
                 $isPayedStatus = false;
-            }
+            } */
 
             if (
                 $validatedData['status'] == 'infraction' ||
@@ -583,12 +583,12 @@ class CelcashWebhooksController extends Controller
                 $isPayedStatus = false;
             } */
 
-            if (
+            /* if (
                 $validatedData['status'] == 'returned'
             ) {
                 $status = 'refunded';
                 $isPayedStatus = false;
-            }
+            } */
         }
 
         if ($isPayedStatus) {
@@ -808,12 +808,12 @@ class CelcashWebhooksController extends Controller
                 $isPayedStatus = false;
             } */
 
-            if (
+            /* if (
                 $validatedData['data']['status'] == 'REFUNDED'
             ) {
                 $status = 'refunded';
                 $isPayedStatus = false;
-            }
+            } */
         }
 
         if ($isPayedStatus) {
@@ -1035,19 +1035,19 @@ class CelcashWebhooksController extends Controller
                 $isPayedStatus = false;
             } */
 
-            if (
+            /* if (
                 $validatedData['object']['status'] == 'refunded'
             ) {
                 $status = 'refunded';
                 $isPayedStatus = false;
-            }
+            } */
 
-            if (
+            /* if (
                 $validatedData['object']['status'] == 'refunded_med'
             ) {
                 $status = 'refunded';
                 $isPayedStatus = false;
-            }
+            } */
         }
 
         if ($isPayedStatus) {
