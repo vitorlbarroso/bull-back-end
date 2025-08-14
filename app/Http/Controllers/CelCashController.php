@@ -425,7 +425,7 @@ class CelCashController extends Controller
                 $unicId = $generatePayment['id'];
                 $pixReference = $generatePayment['pix']['qrcode'];
 
-                $adquirerName = 'super';
+                $adquirerName = 'medius';
 
                 $returnData = [
                     'galax_pay_id' => $generatePayment['id'],
