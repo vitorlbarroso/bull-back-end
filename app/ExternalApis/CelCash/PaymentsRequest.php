@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\RapdynTokens;
 use App\Models\SuperCredentials;
+use App\Models\MediusToken;
 
 class PaymentsRequest
 {
@@ -271,6 +272,14 @@ class PaymentsRequest
         }
     }
 
+    static public function getMediusToken()
+    {
+
+        $mediusAuthToken = MediusToken::where('token_type', 'bearer')->first();
+
+        return $mediusAuthToken->token_value;
+    }
+
     static public function getOwenToken()
     {
         $cert = env('OWEN_CERT');
@@ -426,6 +435,77 @@ class PaymentsRequest
             $createPayment = Http::WithHeaders($headers)
                 ->post(
                     $baseUrl . '/payments',
+                    $body
+                );
+
+            $response = $createPayment->json();
+
+            return $response;
+        }
+        catch (\Exception $e) {
+            Log::error('Erro ao tentar gerar pagamento pix na adquirente: ' . $e->getMessage());
+
+            return [
+                'error' => [
+                    'message' => "Erro ao gerar pagamento pix na adquirente",
+                    'errorMessage' => $e->getMessage(),
+                    'errorCode' => -1100
+                ]
+            ];
+        }
+    }
+
+    static public function generatePaymentPixMedius($data, $unicId)
+    {
+        $mediusAuthToken = PaymentsRequest::getMediusToken();
+
+        if (isset($mediusAuthToken['error'])) {
+            return [
+                'error' => [
+                    'message' => "Erro ao gerar pedido PIX na adquirente. Consultar tokens!",
+                    'errorMessage' => $mediusAuthToken,
+                    'errorCode' => 1100
+                ]
+            ];
+        }
+
+        $headers = [
+            'Authorization' => 'Basic ' . base64_encode($mediusAuthToken . ':x'),
+            'Content-Type' => 'application/json'
+        ];
+
+        $body = [
+            "customer" => [
+                "name" => $data['customer']['name'],
+                "email" => $data['customer']['email'] ?? 'compras@bullspay.com.br',
+                "phone" => $data['customer']['phone'] ?? '21999999999',
+                "document" => [
+                    "type" => 'CPF',
+                    "number" => $data['customer']['document']['number'] ?? '39233341097',
+                ]
+            ],
+            "paymentMethod" => "PIX",
+            "pix" => [
+                "expiresInDays" => 1,
+            ],
+            "items" => [
+                [
+                    "title" => "Compra digital - Produto Bulls Pay",
+                    "quantity" => 1,
+                    "unitPrice" => $data['price'],
+                    "externalRef" => $unicId,
+                ]
+            ],
+            "amount" => $data['price'],
+            "postbackUrl" => env('MEDIUS_WEBHOOKS_BASE_URL'),
+        ];
+
+        $baseUrl = env('MEDIUS_BASE_URL');
+
+        try {
+            $createPayment = Http::WithHeaders($headers)
+                ->post(
+                    $baseUrl . '/functions/v1/transactions',
                     $body
                 );
 
