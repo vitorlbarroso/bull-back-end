@@ -58,7 +58,9 @@ class WithdrawalRequestsController extends Controller
             return Responses::ERROR('Os saques não estão habilitados para a sua conta!', null, 1100, 400);
         }
 
-        $createWithdrawalRequest = null;
+        return Responses::ERROR('Funcionalidade em manutenção!');
+
+        /* $createWithdrawalRequest = null;
 
         $withdrawalRequestId = null;
         // Usando lock para prevenir race conditions
@@ -141,6 +143,6 @@ class WithdrawalRequestsController extends Controller
             }
         }
 
-        return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
+        return Responses::SUCCESS('Solicitação de saque criada com sucesso!'); */
     }
 }
