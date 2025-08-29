@@ -58,8 +58,6 @@ class WithdrawalRequestsController extends Controller
             return Responses::ERROR('Os saques não estão habilitados para a sua conta!', null, 1100, 400);
         }
 
-        return Responses::ERROR('Funcionalidade em manutenção!');
-
         $createWithdrawalRequest = null;
 
         $withdrawalRequestId = null;
