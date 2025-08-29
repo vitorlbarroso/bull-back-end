@@ -103,9 +103,9 @@ class WithdrawalRequestsController extends Controller
 
                 $withdrawalRequestId = $createWithdrawalRequest->id;
 
-                //if (!$user->auto_withdrawal) {
+                if (!$user->auto_withdrawal) {
                     return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
-                //}
+                }
             }
             catch (\Exception $e) {
                 Log::error('Não foi possível solicitar um saque para o usuário', ['error' => $e->getMessage()]);
@@ -115,7 +115,7 @@ class WithdrawalRequestsController extends Controller
             }
         });
 
-        /* if ($user->auto_withdrawal) {
+        if ($user->auto_withdrawal) {
             $adminBaseUrl = env('ADMIN_BASE_URL');
             $xApiToken = env('XATK');
 
@@ -143,7 +143,7 @@ class WithdrawalRequestsController extends Controller
                 Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage());
                 return Responses::ERROR('Erro na requisição de autowithdrawal: ' . $e->getMessage(), null, 1600, 400);
             }
-        } */
+        }
 
         return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
     }
