@@ -377,6 +377,11 @@ class UserPaymentsDataService
             'withdrawal_tax' => 0
         ];
 
+        if ($user->pix_tax_value < 1 || $user->pix_money_tax_value < 0.5 || $user->withdrawal_tax < 0.5) {
+            \Log::error('Dados do usuário que solicitou saque: ', ['user' => $user, 'pix_tax_value' => $user->pix_tax_value, 'pix_money_tax_value' => $user->pix_money_tax_value, 'withdrawal_tax' => $user->withdrawal_tax]);
+            return false;
+        }
+
         try {
             $currentDate = Carbon::now();
             $periodDays = $currentDate->copy()->subDays($user->withdrawal_period);

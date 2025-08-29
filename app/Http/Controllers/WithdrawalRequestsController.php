@@ -60,7 +60,7 @@ class WithdrawalRequestsController extends Controller
 
         return Responses::ERROR('Funcionalidade em manutenção!');
 
-        /* $createWithdrawalRequest = null;
+        $createWithdrawalRequest = null;
 
         $withdrawalRequestId = null;
         // Usando lock para prevenir race conditions
@@ -75,6 +75,10 @@ class WithdrawalRequestsController extends Controller
             }
 
             $getTotalAuthorizedWithdrawal = UserPaymentsDataService::getWithdrawalData();
+
+            if (!$getTotalAuthorizedWithdrawal) {
+                return Responses::ERROR('Erro ao validar dados do usuário para saque. Solicite suporte!', null, 1400, 400);
+            }
 
             if (($getTotalAuthorizedWithdrawal['total_available'] * 100) < $validated['amount']) {
                 return Responses::ERROR('O valor solicitado é maior que o disponível para saque!', $getTotalAuthorizedWithdrawal['total_available'], 1300, 400);
@@ -101,9 +105,9 @@ class WithdrawalRequestsController extends Controller
 
                 $withdrawalRequestId = $createWithdrawalRequest->id;
 
-                if (!$user->auto_withdrawal) {
+                //if (!$user->auto_withdrawal) {
                     return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
-                }
+                //}
             }
             catch (\Exception $e) {
                 Log::error('Não foi possível solicitar um saque para o usuário', ['error' => $e->getMessage()]);
@@ -113,7 +117,7 @@ class WithdrawalRequestsController extends Controller
             }
         });
 
-        if ($user->auto_withdrawal) {
+        /* if ($user->auto_withdrawal) {
             $adminBaseUrl = env('ADMIN_BASE_URL');
             $xApiToken = env('XATK');
 
@@ -141,8 +145,8 @@ class WithdrawalRequestsController extends Controller
                 Log::error('Erro na requisição de autowithdrawal: ' . $e->getMessage());
                 return Responses::ERROR('Erro na requisição de autowithdrawal: ' . $e->getMessage(), null, 1600, 400);
             }
-        }
+        } */
 
-        return Responses::SUCCESS('Solicitação de saque criada com sucesso!'); */
+        return Responses::SUCCESS('Solicitação de saque criada com sucesso!');
     }
 }
